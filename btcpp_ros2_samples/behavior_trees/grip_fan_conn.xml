@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4">
+    <BehaviorTree ID="MainTree">
+        <Sequence name="MainProcess">
+            
+            <Fallback name="Stage1_Fan">
+                <Condition ID="IsFanPlaced" fan_status="{IsFanPlaced}"/>
+                <Fallback name="Fan_Action_Group">
+                    <Sequence name="Fan_Steps">
+                        <Action ID="CameraLocateFan" target_pose="{FanPose}"/>
+                        <Action ID="MoveToPickFan" goal="{FanPose}"/>
+                        <Action ID="GripFan"/>
+                        <Action ID="MoveToPlaceFan" goal="{FixturePose}"/>
+                        <Action ID="GripperPlaceFan"/>
+                        <Action ID="UpdateBlackboard" key="IsFanPlaced" value="true"/>
+                    </Sequence>
+                    <SubTree ID="RecoverySubtree"/> </Fallback>
+            </Fallback>
+
+            <Fallback name="Stage2_Connector">
+                <Condition ID="IsConnectorGripped" grip_status="{IsConnectorGripped}"/>
+                <Fallback name="Grip_Action_Group">
+                    <Sequence name="Grip_Steps">
+                        <Action ID="CameraSwitch" camera="eye_in_hand"/>
+                        <Action ID="CameraLocateConnector" target_pose="{ConnPose}"/>
+                        <Action ID="MoveToPlannedWaypoints" path="{ConnPose}"/>
+                        <Action ID="GripConnector"/>
+                        <Action ID="UpdateBlackboard" key="IsConnectorGripped" value="true"/>
+                    </Sequence>
+                    <SubTree ID="RecoverySubtree"/>
+                </Fallback>
+            </Fallback>
+
+            <Fallback name="Stage3_Plug">
+                <Condition ID="IsConnectorPlugged" plug_status="{IsConnectorPlugged}"/>
+                <Fallback name="Plug_Action_Group">
+                    <Sequence name="Plug_Steps">
+                        <Action ID="SensorLocateConnector"/>
+                        <Action ID="MoveToPlannedWaypoints" path="linear_insert"/>
+                        <Action ID="GripperRelease"/>
+                        <Action ID="UpdateBlackboard" key="IsConnectorPlugged" value="true"/>
+                    </Sequence>
+                    <SubTree ID="RecoverySubtree"/>
+                </Fallback>
+            </Fallback>
+
+        </Sequence>
+    </BehaviorTree>
+
+    <BehaviorTree ID="RecoverySubtree">
+        <Sequence name="Recovery_Logic">
+            <Action ID="GripperRelease"/>
+            <Action ID="MoveToInitPose"/>
+            <AlwaysFailure/> </Sequence>
+    </BehaviorTree>
+
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Condition ID="IsFanPlaced"
+               editable="true">
+               <input_port name="fan_status"/>
+        </Condition>
+        <Condition ID="IsConnectorGripped"
+               editable="true">
+               <input_port name="grip_status"/>
+        </Condition>
+        <Condition ID="IsConnectorPlugged"
+               editable="true">
+               <input_port name="plug_status"/>
+        </Condition>
+        <Action ID="CameraLocateFan"
+                editable="true">
+                <input_port name="target_pose"/>
+        </Action>
+        <Action ID="MoveToPickFan"
+                editable="true">
+                <input_port name="goal"/>
+        </Action>
+        <Action ID="GripFan"
+                editable="true"/>
+        <Action ID="MoveToPlaceFan"
+                editable="true">
+                <input_port name="goal"/>
+        </Action>
+        <Action ID="GripperPlaceFan"
+                editable="true"/>
+        <Action ID="UpdateBlackboard"
+                editable="true">
+                <input_port name="key"/>
+                <input_port name="value"/>
+        </Action>
+        <Action ID="CameraSwitch"
+                editable="true">
+                <input_port name="camera"/>
+        </Action>
+        <Action ID="CameraLocateConnector"
+                editable="true">
+                <input_port name="target_pose"/>
+        </Action>
+        <Action ID="MoveToPlannedWaypoints"
+                editable="true">
+                <input_port name="path"/>
+        </Action>
+        <Action ID="GripConnector"
+                editable="true"/>
+        <Action ID="SensorLocateConnector"
+                editable="true"/>
+        <Action ID="GripperRelease"
+                editable="true"/>
+        <Action ID="MoveToInitPose"
+                editable="true"/>
+    </TreeNodesModel>
+
+</root>
