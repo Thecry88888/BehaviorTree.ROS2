@@ -1,0 +1,11 @@
+# Request
+robot_interfaces/ArmAttitude attitude
+
+---
+# Result
+bool success
+
+---
+# Feedback
+string current_step
+

@@ -1,0 +1,7 @@
+# (Request)
+float32[6] startpose  # 機械臂的起始位置
+float32[6] endpose    # 機械臂的終點位置
+---
+# (Response)
+bool success
+string message

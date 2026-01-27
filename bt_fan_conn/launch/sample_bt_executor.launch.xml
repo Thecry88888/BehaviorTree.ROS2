@@ -1,0 +1,7 @@
+<launch>
+  <arg name="gripper_server" default="true"/>
+
+  <group if="$(var gripper_server)">
+    <node pkg="btcpp_ros2_samples" exec="gripper_server" output="screen"/>
+  </group>
+</launch>

@@ -1,19 +1,19 @@
 #include "behaviortree_ros2/bt_action_node.hpp"
-#include "btcpp_ros2_interfaces/action/sleep.hpp"
+#include "btcpp_ros2_interfaces/action/parallel_gripper.hpp"
 
 using namespace BT;
 
-class SleepAction : public RosActionNode<btcpp_ros2_interfaces::action::Sleep>
+class ParallelGripperAction : public RosActionNode<btcpp_ros2_interfaces::action::ParallelGripper>
 {
 public:
-  SleepAction(const std::string& name, const NodeConfig& conf,
+  ParallelGripperAction(const std::string& name, const NodeConfig& conf,
               const RosNodeParams& params)
-    : RosActionNode<btcpp_ros2_interfaces::action::Sleep>(name, conf, params)
+    : RosActionNode<btcpp_ros2_interfaces::action::ParallelGripper>(name, conf, params)
   {}
 
   static BT::PortsList providedPorts()
   {
-    return providedBasicPorts({ InputPort<unsigned>("msec") });
+    return providedBasicPorts({ InputPort<int8_t>("command") });
   }
 
   bool setGoal(Goal& goal) override;

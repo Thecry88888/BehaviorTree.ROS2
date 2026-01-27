@@ -1,0 +1,9 @@
+# Goal
+int8 command                 # 1:INIT, 2:GRIP, 3:PUT
+---
+# Result
+bool success                 # 動作是否成功
+int8 grip_state              # 4:GRIP_SUCCESS, 5:GRIP_MISS
+---
+# Feedback
+float32 degree               # 夾爪當前開合度

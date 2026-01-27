@@ -8,10 +8,10 @@
                 <Fallback name="Fan_Action_Group">
                     <Sequence name="Fan_Steps">
                         <Action ID="CameraLocateFan" target_pose="{FanPose}"/>
-                        <Action ID="MoveToPickFan" goal="{FanPose}"/>
-                        <Action ID="GripFan"/>
-                        <Action ID="MoveToPlaceFan" goal="{FixturePose}"/>
-                        <Action ID="GripperPlaceFan"/>
+                        <Action ID="MoveTo" goal="{FanPose}" _description="Move to pick the fan"/>
+                        <Action ID="Gripper" gripCommand="{GRIP}" _description="Grip the fan"/>
+                        <Action ID="MoveTo" goal="{FixturePose}" _description="Move to place the fan"/>
+                        <Action ID="Gripper" gripCommand="{PUT}" _description="Place the fan"/>
                         <Action ID="UpdateBlackboard" key="IsFanPlaced" value="true"/>
                     </Sequence>
                     <SubTree ID="RecoverySubtree"/> </Fallback>
@@ -23,8 +23,8 @@
                     <Sequence name="Grip_Steps">
                         <Action ID="CameraSwitch" camera="eye_in_hand"/>
                         <Action ID="CameraLocateConnector" target_pose="{ConnPose}"/>
-                        <Action ID="MoveToPlannedWaypoints" path="{ConnPose}"/>
-                        <Action ID="GripConnector"/>
+                        <Action ID="MoveTo" goal="{ConnPose}" _description="Move to pick the connector along planned points"/>
+                        <Action ID="Gripper" gripCommand="{GRIP}" _description="Grip the connector"/>
                         <Action ID="UpdateBlackboard" key="IsConnectorGripped" value="true"/>
                     </Sequence>
                     <SubTree ID="RecoverySubtree"/>
@@ -36,8 +36,8 @@
                 <Fallback name="Plug_Action_Group">
                     <Sequence name="Plug_Steps">
                         <Action ID="SensorLocateConnector"/>
-                        <Action ID="MoveToPlannedWaypoints" path="linear_insert"/>
-                        <Action ID="GripperRelease"/>
+                        <Action ID="MoveTo" goal="linear_insert" _description="Move to plug the connector along planned points"/>
+                        <Action ID="Gripper" gripCommand="{PUT}" _description="Place the connector"/>
                         <Action ID="UpdateBlackboard" key="IsConnectorPlugged" value="true"/>
                     </Sequence>
                     <SubTree ID="RecoverySubtree"/>
@@ -49,8 +49,8 @@
 
     <BehaviorTree ID="RecoverySubtree">
         <Sequence name="Recovery_Logic">
-            <Action ID="GripperRelease"/>
-            <Action ID="MoveToInitPose"/>
+            <Action ID="Gripper" gripCommand="{PUT}" _description="Release the gripper"/>
+            <Action ID="MoveTo" goal="init_pose" _description="Move to initial pose"/>
             <AlwaysFailure/> </Sequence>
     </BehaviorTree>
 
@@ -72,18 +72,13 @@
                 editable="true">
                 <input_port name="target_pose"/>
         </Action>
-        <Action ID="MoveToPickFan"
+        <Action ID="MoveTo"
                 editable="true">
                 <input_port name="goal"/>
         </Action>
-        <Action ID="GripFan"
-                editable="true"/>
-        <Action ID="MoveToPlaceFan"
-                editable="true">
-                <input_port name="goal"/>
+        <Action ID="Gripper" >
+                <input_port name="gripCommand"/>
         </Action>
-        <Action ID="GripperPlaceFan"
-                editable="true"/>
         <Action ID="UpdateBlackboard"
                 editable="true">
                 <input_port name="key"/>
@@ -97,17 +92,7 @@
                 editable="true">
                 <input_port name="target_pose"/>
         </Action>
-        <Action ID="MoveToPlannedWaypoints"
-                editable="true">
-                <input_port name="path"/>
-        </Action>
-        <Action ID="GripConnector"
-                editable="true"/>
         <Action ID="SensorLocateConnector"
-                editable="true"/>
-        <Action ID="GripperRelease"
-                editable="true"/>
-        <Action ID="MoveToInitPose"
                 editable="true"/>
     </TreeNodesModel>
 
