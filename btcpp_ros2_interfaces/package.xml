@@ -14,7 +14,10 @@
 
   <buildtool_depend>rosidl_default_generators</buildtool_depend>
 
+  <build_depend>geometry_msgs</build_depend>
+
   <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
 
   <depend>action_msgs</depend>
 

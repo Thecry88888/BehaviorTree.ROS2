@@ -1,0 +1,9 @@
+# Goal
+geometry_msgs/Pose target_pose
+int8 velocity_override    # 0~100%
+---
+# Result
+bool success                 # true:成功, false:超時or失敗
+---
+# Feedback
+geometry_msgs/Pose current_pose

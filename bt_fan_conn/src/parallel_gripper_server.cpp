@@ -23,7 +23,7 @@ public:
         this->gripper_command_publisher_ = this->create_publisher<robot_interfaces::msg::GripperCommand>("gripper_command", 10);
 
         this->gripper_info_subscriber_ = this->create_subscription<robot_interfaces::msg::GripperInfo>("gripper_info", 
-            rclcpp::QoS(10), std::bind(&ParallelGripperServer::update_gripper_info, this, _1));
+            rclcpp::QoS(10), std::bind(&ParallelGripperServer::update_gripper_state, this, _1));
 
         this->action_server_ = rclcpp_action::create_server<ParallelGripper>(
             this, "parallel_gripper", std::bind(&ParallelGripperServer::handle_goal, this, _1, _2),
@@ -121,9 +121,11 @@ private:
         gripper_command_publisher_->publish(msg);
     }
 
-    void update_gripper_info(const robot_interfaces::msg::GripperInfo::SharedPtr msg)
+    void update_gripper_state(const robot_interfaces::msg::GripperInfo::SharedPtr msg)
     {
         grip_state_.store(msg->result);
+        // manual test command:
+        // ros2 topic pub /gripper_info robot_interfaces/msg/GripperInfo "{result: 4}" -1
     }
   
 };  // class ParallelGripperServer
