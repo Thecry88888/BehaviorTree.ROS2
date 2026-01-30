@@ -72,7 +72,7 @@ private:
     void q_to_wpr(const geometry_msgs::msg::Quaternion& q, double& w, double& p, double& r) {
         tf2::Quaternion tf2_q(q.x, q.y, q.z, q.w);
         tf2::Matrix3x3 m(tf2_q);
-        m.getRPY(r, p, w); // 注意：tf2 的 RPY 對應 FANUC 可能需要調整順序
+        m.getRPY(w, p, r);
         w *= RAD2DEG; p *= RAD2DEG; r *= RAD2DEG;
     }
 
