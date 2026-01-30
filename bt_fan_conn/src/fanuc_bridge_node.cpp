@@ -13,8 +13,8 @@
 
 #include "bt_fan_conn/command_encode.hpp"
 
-#define DER2RAD (M_PI / 180.0)
-#define RAD2DER (180.0 / M_PI)
+#define DEG2RAD (M_PI / 180.0)
+#define RAD2DEG (180.0 / M_PI)
 
 using namespace FANUC::CommandEncode;
 using namespace std::chrono_literals;
@@ -73,7 +73,7 @@ private:
         tf2::Quaternion tf2_q(q.x, q.y, q.z, q.w);
         tf2::Matrix3x3 m(tf2_q);
         m.getRPY(r, p, w); // 注意：tf2 的 RPY 對應 FANUC 可能需要調整順序
-        w *= RAD2DER; p *= RAD2DER; r *= RAD2DER;
+        w *= RAD2DEG; p *= RAD2DEG; r *= RAD2DEG;
     }
 
     void set_override(int8_t value) {
@@ -101,8 +101,12 @@ private:
 
         tf2::Quaternion q;
         // Z-Y-X intrinsic order
-        //euler[5]：yaw（Z 軸）euler[4]：pitch（Y 軸）euler[3]：roll（X 軸）
-        q.setRPY(values[5] * DER2RAD, values[4] * DER2RAD, values[3] * DER2RAD);
+        // euler[3]：roll（X 軸）euler[4]：pitch（Y 軸）euler[5]：yaw（Z 軸）
+        q.setRPY(
+            values[3] * DEG2RAD, // W (X-roll)
+            values[4] * DEG2RAD, // P (Y-pitch)
+            values[5] * DEG2RAD  // R (Z-yaw)
+        );
         t.transform.rotation.x = q.x();
         t.transform.rotation.y = q.y();
         t.transform.rotation.z = q.z();
@@ -125,7 +129,7 @@ private:
         };
         joint_state_msg.position.resize(6);
         for (size_t i = 0; i < 6; ++i) {
-            joint_state_msg.position[i] = values[i] * DER2RAD; // degrees to radians
+            joint_state_msg.position[i] = values[i] * DEG2RAD;
         }
 
         joint_state_publisher_->publish(joint_state_msg);
