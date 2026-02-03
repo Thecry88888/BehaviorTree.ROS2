@@ -1,0 +1,8 @@
+# Request
+bool start_detection
+---
+
+# Response
+bool success
+string frame_name
+geometry_msgs/Pose pose

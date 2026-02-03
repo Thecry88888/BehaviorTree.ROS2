@@ -3,51 +3,49 @@
   <BehaviorTree ID="MainTree">
     <Sequence name="MainProcess">
       <Fallback name="Stage1_Fan">
-        <IsFanPlaced fan_status="{IsFanPlaced}"/>
+        <IsFanPlaced fan_state="{IsFanPlaced}"/>
         <Fallback name="Fan_Action_Group">
           <Sequence name="Fan_Steps">
-            <CameraLocateFan target_pose="{FanPose}"/>
-            <MoveTo goal="{FanPose}"
-                    _description="Move to pick the fan"/>
-            <ParallelGripper gripCommand="{GRIP}"
-                     _description="Grip the fan"/>
             <MoveTo goal="{FixturePose}"
                     _description="Move to place the fan"/>
+            <MoveTo goal="{FanPose}"
+                    _description="Move to pick the fan"/>
             <ParallelGripper gripCommand="{PUT}"
-                     _description="Place the fan"/>
-            <UpdateBlackboard key="IsFanPlaced"
-                              value="true"/>
+                             _description="Place the fan"/>
+            <Script code=" IsFanPlaced := true "/>
+            <ParallelGripper gripCommand="{GRIP}"
+                             _description="Grip the fan"/>
+            <CameraLocateFan target_pose="{FanPose}"/>
           </Sequence>
-          <SubTree ID="RecoverySubtree"/>
+          <SubTree ID="RecoverySubtree"
+                   _autoremap="true"/>
         </Fallback>
       </Fallback>
       <Fallback name="Stage2_Connector">
-        <IsConnectorGripped grip_status="{IsConnectorGripped}"/>
+        <IsConnectorGripped grip_state="{IsConnectorGripped}"/>
         <Fallback name="Grip_Action_Group">
           <Sequence name="Grip_Steps">
-            <CameraSwitch camera="eye_in_hand"/>
             <CameraLocateConnector target_pose="{ConnPose}"/>
+            <CameraSwitch camera="eye_in_hand"/>
             <FollowPath path="{ConnPose}"
                         _description="Move to pick the connector along planned points"/>
             <ParallelGripper gripCommand="{GRIP}"
-                     _description="Grip the connector"/>
-            <UpdateBlackboard key="IsConnectorGripped"
-                              value="true"/>
+                             _description="Grip the connector"/>
+            <Script code=" IsConnectorGripped := true "/>
+            <SensorLocateConnector/>
           </Sequence>
           <SubTree ID="RecoverySubtree"/>
         </Fallback>
       </Fallback>
       <Fallback name="Stage3_Plug">
-        <IsConnectorPlugged plug_status="{IsConnectorPlugged}"/>
+        <IsConnectorPlugged plug_state="{IsConnectorPlugged}"/>
         <Fallback name="Plug_Action_Group">
           <Sequence name="Plug_Steps">
-            <SensorLocateConnector/>
+            <ParallelGripper gripCommand="{PUT}"
+                             _description="Place the connector"/>
+            <Script code="IsConnectorPlugged := true"/>
             <FollowPath path="{ConnPose}"
                         _description="Move to plug the connector along planned points"/>
-            <ParallelGripper gripCommand="{PUT}"
-                     _description="Place the connector"/>
-            <UpdateBlackboard key="IsConnectorPlugged"
-                              value="true"/>
           </Sequence>
           <SubTree ID="RecoverySubtree"/>
         </Fallback>
@@ -58,7 +56,7 @@
   <BehaviorTree ID="RecoverySubtree">
     <Sequence name="Recovery_Logic">
       <ParallelGripper gripCommand="{PUT}"
-               _description="Release the ParallelGripper"/>
+                       _description="Release the ParallelGripper"/>
       <MoveTo goal="init_pose"
               _description="Move to initial pose"/>
       <AlwaysFailure/>
@@ -83,32 +81,27 @@
             editable="true">
       <input_port name="path"/>
     </Action>
-    <Action ID="ParallelGripper">
-      <input_port name="gripCommand"/>
-    </Action>
     <Condition ID="IsConnectorGripped"
                editable="true">
-      <input_port name="grip_status"/>
+      <input_port name="grip_state"/>
     </Condition>
     <Condition ID="IsConnectorPlugged"
                editable="true">
-      <input_port name="plug_status"/>
+      <input_port name="plug_state"/>
     </Condition>
     <Condition ID="IsFanPlaced"
                editable="true">
-      <input_port name="fan_status"/>
+      <input_port name="fan_state"/>
     </Condition>
     <Action ID="MoveTo"
             editable="true">
       <input_port name="goal"/>
     </Action>
+    <Action ID="ParallelGripper">
+      <input_port name="gripCommand"/>
+    </Action>
     <Action ID="SensorLocateConnector"
             editable="true"/>
-    <Action ID="UpdateBlackboard"
-            editable="true">
-      <input_port name="key"/>
-      <input_port name="value"/>
-    </Action>
   </TreeNodesModel>
 
 </root>

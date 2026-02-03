@@ -37,6 +37,8 @@ add_executable(move_to_server src/move_to_server.cpp)
 
 add_executable(parallel_gripper_server src/parallel_gripper_server.cpp)
 
+add_executable(tactile_sensor_server src/tactile_sensor_server.cpp)
+
 # Build an Action Client that calls the action (STATIC version)
 add_executable(parallel_gripper_client
   src/parallel_gripper_action.cpp
@@ -48,7 +50,7 @@ add_executable(move_to_client
 )
 
 ######################################################
-# Build a client that call the sleep action (Plugin version)
+# Build a client that call the action (Plugin version)
 add_library(parallel_gripper_plugin SHARED src/parallel_gripper_action.cpp)
 target_compile_definitions(parallel_gripper_plugin PRIVATE BT_PLUGIN_EXPORT)
 
@@ -60,6 +62,9 @@ target_compile_definitions(move_to_plugin PRIVATE BT_PLUGIN_EXPORT)
 
 add_executable(move_to_client_dyn test/move_to_client.cpp)
 target_compile_definitions(move_to_client_dyn PRIVATE USE_MOVE_TO_PLUGIN)
+
+add_library(tactile_sensor_plugin SHARED src/tactile_sensor_action.cpp)
+target_compile_definitions(tactile_sensor_plugin PRIVATE BT_PLUGIN_EXPORT)
 ######################################################
 # set include directory
 set(INC_DIR "${PROJECT_SOURCE_DIR}/include")
@@ -71,6 +76,11 @@ target_include_directories(parallel_gripper_plugin PUBLIC
 )
 
 target_include_directories(move_to_plugin PUBLIC 
+  $<BUILD_INTERFACE:${INC_DIR}>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(tactile_sensor_plugin PUBLIC 
   $<BUILD_INTERFACE:${INC_DIR}>
   $<INSTALL_INTERFACE:include>
 )
@@ -92,14 +102,17 @@ foreach(target
     fanuc_bridge_node
     move_to_server
     parallel_gripper_server
-
+    tactile_sensor_server
+    
     parallel_gripper_plugin 
     parallel_gripper_client 
     parallel_gripper_client_dyn 
 
     move_to_plugin
     move_to_client
-    move_to_client_dyn)
+    move_to_client_dyn
+    
+    tactile_sensor_plugin)
     
   ament_target_dependencies(${target} ${DEPS})
 endforeach()
@@ -114,6 +127,7 @@ install(TARGETS
   fanuc_bridge_node
   move_to_server
   parallel_gripper_server
+  tactile_sensor_server
 
   parallel_gripper_plugin
   parallel_gripper_client
@@ -122,6 +136,8 @@ install(TARGETS
   move_to_plugin
   move_to_client
   move_to_client_dyn
+
+  tactile_sensor_plugin
   DESTINATION lib/${PROJECT_NAME}
 )
 

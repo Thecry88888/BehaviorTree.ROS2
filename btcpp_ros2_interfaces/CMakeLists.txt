@@ -11,6 +11,7 @@ find_package(geometry_msgs REQUIRED)
 rosidl_generate_interfaces(btcpp_ros2_interfaces
     "msg/NodeStatus.msg"
     "srv/GetTrees.srv"
+    "srv/LocateConnector.srv"
     "action/ExecuteTree.action"
     "action/MoveTo.action"
     "action/ParallelGripper.action"
