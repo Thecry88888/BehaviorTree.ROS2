@@ -36,7 +36,7 @@ public:
         tf_broadcaster_ =
             std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 
-        sensor2j6_tf(0.0); // initial position
+        sensor_to_j6_tf(0.0); // initial position
     }
 
 private:
@@ -138,12 +138,12 @@ private:
         // ros2 topic pub /gripper_info robot_interfaces/msg/GripperInfo "{result: 4, angle: 30.0}" -1
     
         // get motor angle to update tf
-        sensor2j6_tf(msg->angle);
+        sensor_to_j6_tf(msg->angle);
         // manual test command:
         // ros2 run tf2_ros tf2_echo link_6 tactile_sensor_frame
     }
 
-    void sensor2j6_tf(float motor_deg) {
+    void sensor_to_j6_tf(float motor_deg) {
         float rad = motor_deg * DEG2RAD;
         float L1 = 34; ///< 曲柄長度
         float L2 = 36.675; ///< 搖桿長度
@@ -158,11 +158,9 @@ private:
         t.transform.translation.y = -dz;
         t.transform.translation.z = 194.12;
 
-        // optional: tf2::Quaternion q.setRPY(180, 0, -90);
-        t.transform.rotation.x = 0.0;
-        t.transform.rotation.y = 0.7071;
-        t.transform.rotation.z = 0.7071;
-        t.transform.rotation.w = 0.0;
+        tf2::Quaternion q;
+        q.setRPY(180 * DEG2RAD, 0, -90 * DEG2RAD);
+        t.transform.rotation = tf2::toMsg(q);
         tf_broadcaster_->sendTransform(t);
     }
   
@@ -174,5 +172,6 @@ int main(int argc, char** argv)
     auto node = std::make_shared<ParallelGripperServer>();
 
     rclcpp::spin(node);
+    rclcpp::shutdown();
     return 0;
 }

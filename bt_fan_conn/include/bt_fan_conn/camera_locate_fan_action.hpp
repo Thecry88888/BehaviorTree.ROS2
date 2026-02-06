@@ -3,10 +3,10 @@
 
 using namespace BT;
 
-class TactileSensorAction : public RosServiceNode<btcpp_ros2_interfaces::srv::LocateObject>
+class CameraLocateFanAction : public RosServiceNode<btcpp_ros2_interfaces::srv::LocateObject>
 {
 public:
-  TactileSensorAction(const std::string& name, const NodeConfig& conf,
+  CameraLocateFanAction(const std::string& name, const NodeConfig& conf,
               const RosNodeParams& params)
     : RosServiceNode<btcpp_ros2_interfaces::srv::LocateObject>(name, conf, params)
   {}
@@ -14,7 +14,7 @@ public:
   static PortsList providedPorts()
   {
     return providedBasicPorts({ 
-        OutputPort<geometry_msgs::msg::Pose>("sensor_connector_detected_pose")});
+        OutputPort<geometry_msgs::msg::Pose>("camera_fan_detected_pose")});
   }
 
   bool setRequest(std::shared_ptr<Request>& request) override;

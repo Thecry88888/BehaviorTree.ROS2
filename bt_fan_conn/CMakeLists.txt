@@ -49,6 +49,11 @@ add_executable(move_to_client
   test/move_to_client.cpp
 )
 
+add_executable(tactile_sensor_client
+  src/tactile_sensor_action.cpp
+  test/tactile_sensor_client.cpp
+)
+
 ######################################################
 # Build a client that call the action (Plugin version)
 add_library(parallel_gripper_plugin SHARED src/parallel_gripper_action.cpp)
@@ -65,6 +70,9 @@ target_compile_definitions(move_to_client_dyn PRIVATE USE_MOVE_TO_PLUGIN)
 
 add_library(tactile_sensor_plugin SHARED src/tactile_sensor_action.cpp)
 target_compile_definitions(tactile_sensor_plugin PRIVATE BT_PLUGIN_EXPORT)
+
+add_executable(tactile_sensor_client_dyn test/tactile_sensor_client.cpp)
+target_compile_definitions(tactile_sensor_client_dyn PRIVATE USE_TACTILE_SENSOR_PLUGIN)
 ######################################################
 # set include directory
 set(INC_DIR "${PROJECT_SOURCE_DIR}/include")
@@ -87,14 +95,15 @@ target_include_directories(tactile_sensor_plugin PUBLIC
 
 # 為其他執行檔設定路徑
 target_include_directories(fanuc_bridge_node PRIVATE ${INC_DIR})
-target_include_directories(move_to_server PRIVATE ${INC_DIR})
-target_include_directories(parallel_gripper_server PRIVATE ${INC_DIR})
 
 target_include_directories(parallel_gripper_client PRIVATE ${INC_DIR})
 target_include_directories(parallel_gripper_client_dyn PRIVATE ${INC_DIR})
 
 target_include_directories(move_to_client PRIVATE ${INC_DIR})
 target_include_directories(move_to_client_dyn PRIVATE ${INC_DIR})
+
+target_include_directories(tactile_sensor_client PRIVATE ${INC_DIR})
+target_include_directories(tactile_sensor_client_dyn PRIVATE ${INC_DIR})
 ######################################################
 # ament_target_dependencies
 
@@ -112,7 +121,10 @@ foreach(target
     move_to_client
     move_to_client_dyn
     
-    tactile_sensor_plugin)
+    tactile_sensor_plugin
+    tactile_sensor_client
+    tactile_sensor_client_dyn
+)
     
   ament_target_dependencies(${target} ${DEPS})
 endforeach()
@@ -138,6 +150,8 @@ install(TARGETS
   move_to_client_dyn
 
   tactile_sensor_plugin
+  tactile_sensor_client
+  tactile_sensor_client_dyn
   DESTINATION lib/${PROJECT_NAME}
 )
 

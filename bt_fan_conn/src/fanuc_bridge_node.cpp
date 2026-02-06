@@ -10,6 +10,7 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 #include "bt_fan_conn/command_encode.hpp"
 
@@ -107,10 +108,7 @@ private:
             values[4] * DEG2RAD, // P (Y-pitch)
             values[5] * DEG2RAD  // R (Z-yaw)
         );
-        t.transform.rotation.x = q.x();
-        t.transform.rotation.y = q.y();
-        t.transform.rotation.z = q.z();
-        t.transform.rotation.w = q.w();
+        t.transform.rotation = tf2::toMsg(q);
         tf_broadcaster_->sendTransform(t);
     }
 
