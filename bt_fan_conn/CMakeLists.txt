@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(behaviortree_ros2 REQUIRED)
 find_package(btcpp_ros2_interfaces REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2 REQUIRED)
@@ -21,6 +22,7 @@ set(DEPS
   behaviortree_ros2
   btcpp_ros2_interfaces
   std_msgs
+  std_srvs
   sensor_msgs
   geometry_msgs
   tf2
@@ -33,11 +35,16 @@ set(DEPS
 # Action Server
 add_executable(fanuc_bridge_node src/fanuc_bridge_node.cpp)
 
+add_executable(camera_bridge_node src/camera_bridge_node.cpp)
+
 add_executable(move_to_server src/move_to_server.cpp)
 
 add_executable(parallel_gripper_server src/parallel_gripper_server.cpp)
 
 add_executable(tactile_sensor_server src/tactile_sensor_server.cpp)
+
+add_executable(conveyor_camera_server src/conveyor_camera_server.cpp)
+add_executable(in_hand_camera_server src/in_hand_camera_server.cpp)
 
 # Build an Action Client that calls the action (STATIC version)
 add_executable(parallel_gripper_client
@@ -109,9 +116,12 @@ target_include_directories(tactile_sensor_client_dyn PRIVATE ${INC_DIR})
 
 foreach(target 
     fanuc_bridge_node
+    camera_bridge_node
     move_to_server
     parallel_gripper_server
     tactile_sensor_server
+    conveyor_camera_server
+    in_hand_camera_server
     
     parallel_gripper_plugin 
     parallel_gripper_client 
@@ -137,9 +147,12 @@ target_link_libraries(move_to_client_dyn move_to_plugin)
 
 install(TARGETS
   fanuc_bridge_node
+  camera_bridge_node
   move_to_server
   parallel_gripper_server
   tactile_sensor_server
+  conveyor_camera_server
+  in_hand_camera_server
 
   parallel_gripper_plugin
   parallel_gripper_client

@@ -3,6 +3,7 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_ros/transform_broadcaster.h"
 #include "btcpp_ros2_interfaces/srv/locate_object.hpp"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 
 class InHandCameraServer : public rclcpp::Node{

@@ -8,9 +8,12 @@
 #include "std_srvs/srv/trigger.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "tf2_ros/transform_broadcaster.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 #define DEG2RAD (M_PI / 180.0)
 #define RAD2DEG (180.0 / M_PI)
+
+using namespace std::chrono_literals;
 
 class CameraBridgeNode : public rclcpp::Node {
 public:
@@ -198,7 +201,7 @@ private:
             RCLCPP_ERROR(this->get_logger(), "Failed to set timeout on client socket");
         }
 
-        RCLCPP_INFO(this->get_logger(), "Client connected. Timeout set to %ds", timeout.tv_sec + timeout.tv_usec / 1e6);
+        RCLCPP_INFO(this->get_logger(), "Client connected. Timeout set to %2fs", timeout.tv_sec + timeout.tv_usec / 1e6);
         return client;
     }
 };

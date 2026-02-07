@@ -1,5 +1,6 @@
 #include "behaviortree_ros2/bt_service_node.hpp"
 #include "btcpp_ros2_interfaces/srv/locate_object.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 
 using namespace BT;
 
