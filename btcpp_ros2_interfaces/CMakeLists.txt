@@ -13,6 +13,7 @@ rosidl_generate_interfaces(btcpp_ros2_interfaces
     "srv/GetTrees.srv"
     "srv/LocateObject.srv"
     "action/ExecuteTree.action"
+    "action/LocateObject.action"
     "action/MoveTo.action"
     "action/ParallelGripper.action"
     "action/Sleep.action"

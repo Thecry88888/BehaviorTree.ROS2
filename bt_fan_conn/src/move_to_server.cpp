@@ -67,7 +67,7 @@ private:
 
         tf2::Quaternion target_q;
         tf2::fromMsg(goal->target_pose.orientation, target_q);
-        const float pos_tolerance = 1;   // mm
+        const float pos_tolerance = 0.001;   // meter
         const float ang_tolerance = 0.017;   // rad
         float dist = std::numeric_limits<float>::max();
         float angle_diff = std::numeric_limits<float>::max();
@@ -118,7 +118,7 @@ private:
             feedback->current_pose.orientation = t.transform.rotation;
             goal_handle->publish_feedback(feedback);
 
-            RCLCPP_INFO(this->get_logger(), "Target Reached (Dist: %.2f)", dist);
+            RCLCPP_INFO(this->get_logger(), "Target Reached (Dist: %.3f m)", dist);
             // 判斷是否抵達
             if (dist < pos_tolerance && angle_diff < ang_tolerance) {
                 result->success = true;

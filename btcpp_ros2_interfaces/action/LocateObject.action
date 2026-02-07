@@ -1,0 +1,9 @@
+# Goal: 啟動辨識
+bool start_detection
+---
+# Result: 最終結果
+bool success
+string message
+---
+# Feedback: 中間狀態 (可不使用)
+string status

@@ -96,9 +96,9 @@ private:
         t.header.stamp = this->get_clock()->now();
         t.header.frame_id = "base_link";
         t.child_frame_id = "link_6"; // parameterize?
-        t.transform.translation.x = values[0];
-        t.transform.translation.y = values[1];
-        t.transform.translation.z = values[2];
+        t.transform.translation.x = values[0]/1000.0; // mm to m
+        t.transform.translation.y = values[1]/1000.0; // mm to m
+        t.transform.translation.z = values[2]/1000.0; // mm to m
 
         tf2::Quaternion q;
         // Z-Y-X intrinsic order

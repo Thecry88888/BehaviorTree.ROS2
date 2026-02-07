@@ -145,7 +145,7 @@ private:
 
     void sensor_to_j6_tf(float motor_deg) {
         float rad = motor_deg * DEG2RAD;
-        float L1 = 34; ///< 曲柄長度
+        float L1 = 34; ///< 曲柄長度 (mm)
         float L2 = 36.675; ///< 搖桿長度
         float offset = -13.75+3.11; ///< 滑塊偏移量+矽膠凸起
         
@@ -155,8 +155,8 @@ private:
         t.header.frame_id = "link_6";
         t.child_frame_id = "tactile_sensor_frame";
         t.transform.translation.x = 0.0;
-        t.transform.translation.y = -dz;
-        t.transform.translation.z = 194.12;
+        t.transform.translation.y = -dz/1000.0;
+        t.transform.translation.z = 0.19412;
 
         tf2::Quaternion q;
         q.setRPY(180 * DEG2RAD, 0, -90 * DEG2RAD);

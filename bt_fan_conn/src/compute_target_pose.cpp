@@ -4,45 +4,64 @@
 
 using namespace BT;
 
-class ComputeTargetPose : public SyncActionNode
-{
+class ComputeTargetPose : public BT::SyncActionNode {
 public:
-    ComputeTargetPose(const std::string& name, const NodeConfig& config, std::shared_ptr<tf2_ros::Buffer> tf_buffer)
-        : SyncActionNode(name, config), tf_buffer_(tf_buffer) {}
+    ComputeTargetPose(const std::string& name, const BT::NodeConfig& config, std::shared_ptr<tf2_ros::Buffer> tf_buffer)
+        : BT::SyncActionNode(name, config), tf_buffer_(tf_buffer) {}
 
-    static PortsList providedPorts() {
-        return { 
-            InputPort<geometry_msgs::msg::Pose>("object_goal"), // 連接器最終要去的位置
-            OutputPort<geometry_msgs::msg::Pose>("link6_target")    // 手臂應該去的位置
+    static BT::PortsList providedPorts() {
+        return {
+            BT::InputPort<std::string>("target_frame"),   // 目標frame (e.g., "fan_frame")
+            BT::InputPort<std::string>("tool_frame"),     // 機器人哪部分去 (e.g., "gipper_center_frame")
+            BT::InputPort<std::string>("base_frame"),     // 參考座標 (e.g., "base_link")
+            BT::InputPort<std::vector<double>>("offset"), // 可選偏移 [x, y, z, r, p, y]
+            BT::OutputPort<geometry_msgs::msg::Pose>("target_pose") // 算出的 link_6 座標
         };
     }
 
-    NodeStatus tick() override {
-        auto goal_res = getInput<geometry_msgs::msg::Pose>("object_goal");
-        if (!goal_res) return NodeStatus::FAILURE;
+    BT::NodeStatus tick() override {
+        std::string target, tool, base;
+        if (!getInput("target_frame", target) || !getInput("tool_frame", tool) || !getInput("base_frame", base)) {
+            return BT::NodeStatus::FAILURE;
+        }
 
         try {
-            // 1. 取得當前 link_6 到 connector_frame 的相對關係 (這段是固定的)
-            auto t_link6_to_conn = tf_buffer_->lookupTransform("link_6", "connector_frame", tf2::TimePointZero);
-            
-            tf2::Transform tf2_link6_to_conn;
-            tf2::fromMsg(t_link6_to_conn.transform, tf2_link6_to_conn);
+            // when tool = target, tool can grip target
+            // get T_base_target = T_base_link6 * T_link6_tool
+            // -> T_base_link6 = T_base_target * (T_link6_tool)^-1
 
-            // 2. 取得目標位置 T_base_to_goal
-            tf2::Transform tf2_base_to_goal;
-            tf2::fromMsg(goal_res.value(), tf2_base_to_goal);
+            // 取得目標在基座下的位置 T_base_target
+            auto t_base_target = tf_buffer_->lookupTransform(base, target, tf2::TimePointZero);
+            tf2::Transform T_base_target;
+            tf2::fromMsg(t_base_target.transform, T_base_target);
 
-            // 3. 計算手臂目標：T_base_to_link6 = T_base_to_goal * (T_link6_to_conn).inverse()
-            tf2::Transform tf2_base_to_link6 = tf2_base_to_goal * tf2_link6_to_conn.inverse();
+            // 取得工具相對於 Flange (link_6) 的固定關係 T_link6_tool
+            auto t_link6_tool = tf_buffer_->lookupTransform("link_6", tool, tf2::TimePointZero);
+            tf2::Transform T_link6_tool;
+            tf2::fromMsg(t_link6_tool.transform, T_link6_tool);
 
-            // 4. 輸出給黑板
-            geometry_msgs::msg::Pose link6_target;
-            tf2::toMsg(tf2_base_to_link6, link6_target);
-            setOutput("link6_target", link6_target);
+            // T_base_link6 = T_base_target * (T_link6_tool)^-1
+            tf2::Transform T_base_link6 = T_base_target * T_link6_tool.inverse();
 
-            return NodeStatus::SUCCESS;
+            // 4. (選配) 加上 Approach 偏移，例如在目標上方 5cm
+            std::vector<double> offset;
+            if (getInput("offset", offset) && offset.size() == 6) {
+                tf2::Transform T_offset;
+                T_offset.setOrigin(tf2::Vector3(offset[0], offset[1], offset[2]));
+                tf2::Quaternion q_off;
+                q_off.setRPY(offset[3], offset[4], offset[5]);
+                T_offset.setRotation(q_off);
+                T_base_link6 = T_base_link6 * T_offset; // 局部座標系偏移
+            }
+
+            geometry_msgs::msg::Pose goal;
+            tf2::toMsg(T_base_link6, goal);
+            setOutput("target_pose", goal);
+
+            return BT::NodeStatus::SUCCESS;
         } catch (tf2::TransformException &ex) {
-            return NodeStatus::FAILURE;
+            RCLCPP_WARN(rclcpp::get_logger("BT"), "TF 計算失敗: %s", ex.what());
+            return BT::NodeStatus::FAILURE;
         }
     }
 
