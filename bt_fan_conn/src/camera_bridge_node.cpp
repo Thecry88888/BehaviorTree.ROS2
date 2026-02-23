@@ -64,17 +64,12 @@ private:
             response->message = "Socket send failed";
             return;
         }
-        // non-blocking recv
+        
         FanPacket fan_packet;
-        ssize_t bytes_received = recv(clientSocket_, &fan_packet, sizeof(FanPacket), MSG_DONTWAIT);
-        if (bytes_received < 0) {
-            RCLCPP_ERROR(this->get_logger(), "Recv failed or Timeout!");
+        std::string error_msg;
+        if (!receive_fan_packet(fan_packet, error_msg)) {
             response->success = false;
-            response->message = "Vision PC Timeout";
-            return;
-        } else if (bytes_received < sizeof(FanPacket)) {
-            response->success = false;
-            response->message = "Received corrupted data size";
+            response->message = error_msg;
             return;
         }
 
@@ -111,17 +106,12 @@ private:
             response->message = "Socket send failed";
             return;
         }
-        // non-blocking recv
+
         FanPacket fan_packet;
-        ssize_t bytes_received = recv(clientSocket_, &fan_packet, sizeof(FanPacket), MSG_DONTWAIT);
-        if (bytes_received < 0) {
-            RCLCPP_ERROR(this->get_logger(), "Recv failed or Timeout!");
+        std::string error_msg;
+        if (!receive_fan_packet(fan_packet, error_msg)) {
             response->success = false;
-            response->message = "Vision PC Timeout";
-            return;
-        } else if (bytes_received < sizeof(FanPacket)) {
-            response->success = false;
-            response->message = "Received corrupted data size";
+            response->message = error_msg;
             return;
         }
 
@@ -141,6 +131,28 @@ private:
         tf_broadcaster_->sendTransform(t);
         response->success = true;
         response->message = "Fan pose updated via TF";
+    }
+
+    bool receive_fan_packet(FanPacket& fan_packet, std::string& error_message) {
+        uint8_t* buffer = reinterpret_cast<uint8_t*>(&fan_packet);
+        ssize_t total_received = 0;
+        ssize_t expected_size = sizeof(FanPacket);
+
+        while (total_received < expected_size) {
+            ssize_t bytes_received = recv(clientSocket_, buffer + total_received, expected_size - total_received, 0);
+            
+            if (bytes_received > 0) {
+                total_received += bytes_received;
+            } else if (bytes_received == 0) {
+                error_message = "Client disconnected";
+                return false;
+            } else {
+                RCLCPP_ERROR(this->get_logger(), "Recv timeout or error!");
+                error_message = "Vision PC Timeout";
+                return false;
+            }
+        }
+        return true;
     }
 
     void check_socket_connection() {

@@ -1,0 +1,102 @@
+#include "bt_fan_conn/follow_path_action.hpp"
+#include "behaviortree_ros2/plugins.hpp"
+#include "geometry_msgs/msg/pose.hpp"
+#include "shape_msgs/msg/solid_primitive.hpp"
+
+bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
+{
+    auto target_pose = getInput<geometry_msgs::msg::Pose>("target_pose");
+    if (!target_pose) return false;
+
+    moveit_msgs::msg::Constraints constr;
+    constr.name = "goal_constraints";
+
+    // 位置約束 (Position Constraint)
+    moveit_msgs::msg::PositionConstraint pos_con;
+    pos_con.header.frame_id = "base_link";
+    pos_con.link_name = "link_6";
+    
+    // 定義一個微小的目標區域 (例如 1mm 的方塊)
+    shape_msgs::msg::SolidPrimitive box;
+    box.type = shape_msgs::msg::SolidPrimitive::BOX;
+    box.dimensions = {0.01, 0.01, 0.01}; // 1mm 容差
+    
+    pos_con.constraint_region.primitives.push_back(box);
+    pos_con.constraint_region.primitive_poses.push_back(target_pose.value());
+    pos_con.weight = 1.0;
+
+    constr.position_constraints.push_back(pos_con);
+
+    // 姿勢約束 (Orientation Constraint)
+    moveit_msgs::msg::OrientationConstraint ori_con;
+    ori_con.header.frame_id = "base_link";
+    ori_con.link_name = "link_6";
+    ori_con.orientation = target_pose.value().orientation;
+    ori_con.absolute_x_axis_tolerance = 0.01; // 弧度容差
+    ori_con.absolute_y_axis_tolerance = 0.01;
+    ori_con.absolute_z_axis_tolerance = 0.01;
+    ori_con.weight = 1.0;
+    
+    constr.orientation_constraints.push_back(ori_con);
+
+    goal.request.group_name = "manipulator"; // 你的規劃組名稱
+    goal.request.num_planning_attempts = 5; // 最多嘗試 5 次規劃
+    goal.request.allowed_planning_time = 1.0; // 允許規劃 1 秒
+    goal.request.goal_constraints.push_back(constr);
+
+    return true;
+}
+
+NodeStatus FollowPathAction::onResultReceived(const RosActionNode::WrappedResult& wr)
+{
+    if (wr.code != rclcpp_action::ResultCode::SUCCEEDED) {
+        RCLCPP_ERROR(logger(), "Action failure, error code: %d", static_cast<int>(wr.code));
+        return NodeStatus::FAILURE;
+    }
+
+    auto error_code = wr.result->error_code.val;
+
+    using Error = moveit_msgs::msg::MoveItErrorCodes;
+
+    switch (error_code) {
+        case Error::SUCCESS:
+            RCLCPP_INFO(logger(), "MoveGroup: success");
+            return NodeStatus::SUCCESS;
+
+        case Error::PLANNING_FAILED:
+            RCLCPP_ERROR(logger(), "MoveGroup: planning failed");
+            return NodeStatus::FAILURE;
+
+        case Error::CONTROL_FAILED:
+        // This usually occurs when the Fanuc Node (underlying controller) reports a failure, and MoveIt forwards it.
+            RCLCPP_ERROR(logger(), "MoveGroup: control failed");
+            return NodeStatus::FAILURE;
+
+        case Error::TIMED_OUT:
+            RCLCPP_ERROR(logger(), "MoveGroup: timed out");
+            return NodeStatus::FAILURE;
+
+        case Error::INVALID_MOTION_PLAN:
+            RCLCPP_ERROR(logger(), "MoveGroup: invalid motion plan");
+            return NodeStatus::FAILURE;
+
+        default:
+            RCLCPP_ERROR(logger(), "MoveGroup: unknown error, code: %d", error_code);
+            return NodeStatus::FAILURE;
+    }
+}
+
+NodeStatus FollowPathAction::onFailure(ActionNodeErrorCode error)
+{
+    RCLCPP_ERROR(logger(), "%s: onFailure with error: %s", name().c_str(), toStr(error));
+    return NodeStatus::FAILURE;
+}
+
+void FollowPathAction::onHalt()
+{
+    RCLCPP_INFO(logger(), "%s: onHalt", name().c_str());
+}
+
+// Plugin registration.
+// The class FollowPathAction will self register with name  "FollowPathAction".
+CreateRosNodePlugin(FollowPathAction, "FollowPathAction");

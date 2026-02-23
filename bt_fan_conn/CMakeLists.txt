@@ -17,6 +17,9 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(robot_interfaces REQUIRED)
+find_package(control_msgs REQUIRED)
+find_package(moveit_msgs REQUIRED)
+find_package(shape_msgs REQUIRED)
 
 set(DEPS
   behaviortree_ros2
@@ -30,6 +33,9 @@ set(DEPS
   tf2_geometry_msgs
   rclcpp_action
   robot_interfaces
+  control_msgs
+  moveit_msgs
+  shape_msgs
 )
 
 # Action Server
@@ -80,6 +86,9 @@ target_compile_definitions(tactile_sensor_plugin PRIVATE BT_PLUGIN_EXPORT)
 
 add_executable(tactile_sensor_client_dyn test/tactile_sensor_client.cpp)
 target_compile_definitions(tactile_sensor_client_dyn PRIVATE USE_TACTILE_SENSOR_PLUGIN)
+
+add_library(follow_path_plugin SHARED src/follow_path_action.cpp)
+target_compile_definitions(follow_path_plugin PRIVATE BT_PLUGIN_EXPORT)
 ######################################################
 # set include directory
 set(INC_DIR "${PROJECT_SOURCE_DIR}/include")
@@ -96,6 +105,11 @@ target_include_directories(move_to_plugin PUBLIC
 )
 
 target_include_directories(tactile_sensor_plugin PUBLIC 
+  $<BUILD_INTERFACE:${INC_DIR}>
+  $<INSTALL_INTERFACE:include>
+)
+
+target_include_directories(follow_path_plugin PUBLIC 
   $<BUILD_INTERFACE:${INC_DIR}>
   $<INSTALL_INTERFACE:include>
 )
@@ -134,7 +148,9 @@ foreach(target
     tactile_sensor_plugin
     tactile_sensor_client
     tactile_sensor_client_dyn
-)
+
+    follow_path_plugin
+  )
     
   ament_target_dependencies(${target} ${DEPS})
 endforeach()
@@ -165,6 +181,8 @@ install(TARGETS
   tactile_sensor_plugin
   tactile_sensor_client
   tactile_sensor_client_dyn
+  
+  follow_path_plugin
   DESTINATION lib/${PROJECT_NAME}
 )
 
