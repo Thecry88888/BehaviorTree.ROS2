@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <xacro:macro name="create_link" params="
+        link_name
+        xyz_offset
+        rpy_offset
+        mesh_package
+        mesh_name
+        scale_factor=1.0
+        link_mass
+        ixx ixy ixz iyy iyz izz">
+    <link name="${link_name}">
+      <visual>
+        <origin xyz="${xyz_offset}" rpy="${rpy_offset}"/>
+        <geometry>
+          <mesh filename="package://${mesh_package}/meshes/visual/${mesh_name}.stl" scale="${scale_factor} ${scale_factor} ${scale_factor}"/>
+        </geometry>
+        <material name="">
+          <color rgba="0.7921 0.8196 0.9333 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="${xyz_offset}" rpy="${rpy_offset}"/>
+        <geometry>
+          <mesh filename="package://${mesh_package}/meshes/collision/${mesh_name}.stl" scale="${scale_factor} ${scale_factor} ${scale_factor}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <mass value="${link_mass}"/>
+        <inertia ixx="${ixx}" ixy="${ixy}" ixz="${ixz}" iyy="${iyy}" iyz="${iyz}" izz="${izz}"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+</robot>

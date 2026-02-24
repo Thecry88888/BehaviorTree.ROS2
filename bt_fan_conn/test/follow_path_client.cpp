@@ -1,12 +1,13 @@
 #include "behaviortree_ros2/bt_action_node.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/executors.hpp"
+#include "moveit_msgs/action/move_group.hpp"
 
 #include "behaviortree_ros2/plugins.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 
-#ifndef USE_MOVE_TO_PLUGIN
-#include "bt_fan_conn/move_to_action.hpp"
+#ifndef USE_FOLLOW_PATH_PLUGIN
+#include "bt_fan_conn/follow_path_action.hpp"
 #endif
 
 using namespace BT;
@@ -32,16 +33,16 @@ public:
 };
 
 //-------------------------------------------------------------
-// XML 行為樹定義：包含 MoveTo 與 Gripper 的順序組合
+// XML 行為樹定義：給定當前位姿和目標位姿，執行 FollowPathAction
 //-------------------------------------------------------------
 static const char* xml_text = R"(
 <root BTCPP_format="4">
     <BehaviorTree ID="MainTree">
         <Sequence>
-            <PrintValue message="開始移動任務..."/>
+            <PrintValue message="開始執行任務..."/>
             
-            <Timeout msec="10000">
-                <MoveToAction action_name="move_to" target_pose="{my_pose}"/>
+            <Timeout msec="15000">
+                <FollowPathAction action_name="move_action" target_pose="{target_pose}"/>
             </Timeout>
 
             <PrintValue message="全流程完成！"/>
@@ -54,23 +55,26 @@ static const char* xml_text = R"(
 int main(int argc, char** argv)
 {
     rclcpp::init(argc, argv);
-    auto nh = std::make_shared<rclcpp::Node>("moveto_bt_executor");
+    auto nh = std::make_shared<rclcpp::Node>("followpath_bt_executor");
 
     BehaviorTreeFactory factory;
     factory.registerNodeType<PrintValue>("PrintValue");
 
-    // 註冊 MoveTo 節點
+    // 註冊 FollowPath 節點
     RosNodeParams params;
     params.nh = nh;
-    params.default_port_value = "move_to_service";
+    params.default_port_value = "move_group"; // 這裡是 MoveIt Action Server 的名稱
     
-    #ifdef USE_MOVE_TO_PLUGIN
-        RegisterRosNode(factory, "../lib/libmove_to_action_plugin.so", params);
+    #ifdef USE_FOLLOW_PATH_PLUGIN
+        RegisterRosNode(factory, "../lib/libfollow_path_action_plugin.so", params);
     #else
-        factory.registerNodeType<MoveToAction>("MoveToAction", params);
+        factory.registerNodeType<FollowPathAction>("FollowPathAction", params);
     #endif
 
     auto tree = factory.createTreeFromText(xml_text);
+
+    auto action_client = rclcpp_action::create_client<moveit_msgs::action::MoveGroup>(nh, "move_group");
+    action_client->wait_for_action_server();
 
     // --- 測試用：在黑板手動設定一個目標位姿 ---
     geometry_msgs::msg::Pose test_pose;
@@ -78,8 +82,7 @@ int main(int argc, char** argv)
     test_pose.position.y = 0.05;
     test_pose.position.z = 0.2;
     test_pose.orientation.w = 1.0; 
-    tree.rootBlackboard()->set("my_pose", test_pose);
-
+    tree.rootBlackboard()->set("target_pose", test_pose);
     // 執行迴圈
     NodeStatus status = NodeStatus::RUNNING;
     while (rclcpp::ok() && status == NodeStatus::RUNNING) {

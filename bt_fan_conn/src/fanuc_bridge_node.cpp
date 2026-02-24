@@ -2,6 +2,7 @@
 #include "fcntl.h"
 #include "unistd.h"
 #include "rclcpp/rclcpp.hpp"
+#include "rclcpp_action/rclcpp_action.hpp"
 #include <chrono>
 
 #include "sensor_msgs/msg/joint_state.hpp"
@@ -11,6 +12,8 @@
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+#include "control_msgs/action/follow_joint_trajectory.hpp"
+#include "trajectory_msgs/msg/joint_trajectory.hpp"
 
 #include "bt_fan_conn/command_encode.hpp"
 
@@ -22,6 +25,9 @@ using namespace std::chrono_literals;
 
 class FanucBridgeNode : public rclcpp::Node {
 public:
+    using FollowJointTrajectory = control_msgs::action::FollowJointTrajectory;
+    using GoalHandle = rclcpp_action::ServerGoalHandle<FollowJointTrajectory>;
+
     explicit FanucBridgeNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions())
         : Node("fanuc_bridge_node", options), serverSocket_(-1), clientSocket_(-1)
     {   
@@ -40,6 +46,13 @@ public:
         cmd_pose_subscriber_ = this->create_subscription<geometry_msgs::msg::Pose>(
             "cmd_pose", 10, 
             std::bind(&FanucBridgeNode::handle_cmd_pose, this, _1));
+
+        action_server_ = rclcpp_action::create_server<FollowJointTrajectory>(
+            this,
+            "lrmate_200id_controller/follow_joint_trajectory", // 必須與 moveit_controllers.yaml 一致
+            std::bind(&FanucBridgeNode::handle_goal, this, _1, _2),
+            std::bind(&FanucBridgeNode::handle_cancel, this, _1),
+            std::bind(&FanucBridgeNode::handle_accepted, this, _1));
 
         tf_broadcaster_ =
             std::make_unique<tf2_ros::TransformBroadcaster>(*this);
@@ -61,6 +74,7 @@ private:
     rclcpp::TimerBase::SharedPtr euler_state_timer_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr cmd_pose_subscriber_;
+    rclcpp_action::Server<FollowJointTrajectory>::SharedPtr action_server_;
 
     std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
@@ -68,6 +82,47 @@ private:
         double w, p, r;
         q_to_wpr(msg->orientation, w, p, r);
         move(msg->position.x, msg->position.y, msg->position.z, w, p, r);
+    }
+
+    rclcpp_action::GoalResponse handle_goal(
+        const rclcpp_action::GoalUUID &, std::shared_ptr<const FollowJointTrajectory::Goal> goal) 
+    {
+        RCLCPP_INFO(this->get_logger(), "收到新軌跡，點數: %zu", goal->trajectory.points.size());
+        if (goal->trajectory.points.empty()) {
+            return rclcpp_action::GoalResponse::REJECT;
+        }
+        return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
+    }
+
+    rclcpp_action::CancelResponse handle_cancel(const std::shared_ptr<GoalHandle>) {
+        RCLCPP_INFO(this->get_logger(), "收到取消請求");
+        return rclcpp_action::CancelResponse::ACCEPT;
+    }
+
+    void handle_accepted(const std::shared_ptr<GoalHandle> goal_handle) {
+        // 在獨立執行緒執行，避免卡死 Executo
+        std::thread{std::bind(&FanucBridgeNode::execute, this, std::placeholders::_1), goal_handle}.detach();
+    }
+
+    void execute(const std::shared_ptr<GoalHandle> goal_handle) {
+        const auto goal = goal_handle->get_goal();
+        auto result = std::make_shared<FollowJointTrajectory::Result>();
+
+        for (const auto& point : goal->trajectory.points) {
+            if (goal_handle->is_canceling()) {
+                result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
+                goal_handle->canceled(result);
+                RCLCPP_INFO(this->get_logger(), "軌跡執行已取消");
+                return;
+            }
+
+            std::array<float, 6> joint_angles;
+            for (size_t i = 0; i < 6; ++i) {
+                joint_angles[i] = static_cast<float>(point.positions[i] * RAD2DEG);
+            }
+            move_joint(joint_angles);
+            rclcpp::sleep_for(500ms); // 簡單節流，實際應根據 point.time_from_start 調整
+        }
     }
 
     void q_to_wpr(const geometry_msgs::msg::Quaternion& q, double& w, double& p, double& r) {
@@ -140,6 +195,18 @@ private:
         send(clientSocket_, param, sizeof(param), 0);
 
         // script 指令
+        send_script(0);
+    }
+
+    void move_joint(const std::array<float, 6>& joint_angles) {
+        CommandHeader header = {0, CMD_MOVE_JOINT};
+        send(clientSocket_, &header, sizeof(header), 0);
+        float param[6];
+        for (size_t i = 0; i < 6; ++i) {
+            param[i] = joint_angles[i];
+        }
+        send(clientSocket_, param, sizeof(param), 0);
+
         send_script(0);
     }
 

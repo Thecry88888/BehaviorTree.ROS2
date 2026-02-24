@@ -1,5 +1,6 @@
 #include "behaviortree_ros2/bt_action_node.hpp"
 #include "moveit_msgs/action/move_group.hpp"
+#include "geometry_msgs/msg/pose.hpp"
 
 using namespace BT;
 
@@ -14,7 +15,7 @@ public:
     static BT::PortsList providedPorts()
     {
         return providedBasicPorts({
-            InputPort<trajectory_msgs::msg::JointTrajectory>("path")
+            InputPort<geometry_msgs::msg::Pose>("target_pose")
         });
     }
 

@@ -67,6 +67,11 @@ add_executable(tactile_sensor_client
   test/tactile_sensor_client.cpp
 )
 
+add_executable(follow_path_client
+  src/follow_path_action.cpp
+  test/follow_path_client.cpp
+)
+
 ######################################################
 # Build a client that call the action (Plugin version)
 add_library(parallel_gripper_plugin SHARED src/parallel_gripper_action.cpp)
@@ -89,6 +94,9 @@ target_compile_definitions(tactile_sensor_client_dyn PRIVATE USE_TACTILE_SENSOR_
 
 add_library(follow_path_plugin SHARED src/follow_path_action.cpp)
 target_compile_definitions(follow_path_plugin PRIVATE BT_PLUGIN_EXPORT)
+
+add_executable(follow_path_client_dyn test/follow_path_client.cpp)
+target_compile_definitions(follow_path_client_dyn PRIVATE USE_FOLLOW_PATH_PLUGIN)
 ######################################################
 # set include directory
 set(INC_DIR "${PROJECT_SOURCE_DIR}/include")
@@ -125,6 +133,9 @@ target_include_directories(move_to_client_dyn PRIVATE ${INC_DIR})
 
 target_include_directories(tactile_sensor_client PRIVATE ${INC_DIR})
 target_include_directories(tactile_sensor_client_dyn PRIVATE ${INC_DIR})
+
+target_include_directories(follow_path_client PRIVATE ${INC_DIR})
+target_include_directories(follow_path_client_dyn PRIVATE ${INC_DIR})
 ######################################################
 # ament_target_dependencies
 
@@ -150,6 +161,8 @@ foreach(target
     tactile_sensor_client_dyn
 
     follow_path_plugin
+    follow_path_client
+    follow_path_client_dyn
   )
     
   ament_target_dependencies(${target} ${DEPS})
@@ -183,6 +196,8 @@ install(TARGETS
   tactile_sensor_client_dyn
   
   follow_path_plugin
+  follow_path_client
+  follow_path_client_dyn
   DESTINATION lib/${PROJECT_NAME}
 )
 
