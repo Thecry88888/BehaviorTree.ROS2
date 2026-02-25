@@ -25,7 +25,7 @@ install(
 
 # Install URDF and description files
 install(
-  DIRECTORY description/launch description/urdf
+  DIRECTORY description/urdf
   DESTINATION share/${PROJECT_NAME}
 )
 
