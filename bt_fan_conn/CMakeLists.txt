@@ -52,6 +52,7 @@ add_executable(tactile_sensor_server src/tactile_sensor_server.cpp)
 add_executable(conveyor_camera_server src/conveyor_camera_server.cpp)
 add_executable(in_hand_camera_server src/in_hand_camera_server.cpp)
 
+add_executable(compute_target_pose src/compute_target_pose.cpp)
 # Build an Action Client that calls the action (STATIC version)
 add_executable(parallel_gripper_client
   src/parallel_gripper_action.cpp
@@ -163,6 +164,8 @@ foreach(target
     follow_path_plugin
     follow_path_client
     follow_path_client_dyn
+
+    compute_target_pose
   )
     
   ament_target_dependencies(${target} ${DEPS})
@@ -198,6 +201,8 @@ install(TARGETS
   follow_path_plugin
   follow_path_client
   follow_path_client_dyn
+
+  compute_target_pose
   DESTINATION lib/${PROJECT_NAME}
 )
 

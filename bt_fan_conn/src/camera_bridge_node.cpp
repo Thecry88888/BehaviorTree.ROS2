@@ -32,7 +32,7 @@ public:
             std::bind(&CameraBridgeNode::handle_get_conn_pose, this, _1, _2));
     
         tf_broadcaster_ =
-            std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+            std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     }
 
 private:
@@ -50,7 +50,7 @@ private:
     rclcpp::TimerBase::SharedPtr check_connection_timer_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr fan_pose_service_;
     rclcpp::Service<std_srvs::srv::Trigger>::SharedPtr conn_pose_service_;
-    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     void handle_get_fan_pose(
         const std::shared_ptr<std_srvs::srv::Trigger::Request> request,

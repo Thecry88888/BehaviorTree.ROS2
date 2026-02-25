@@ -34,7 +34,7 @@ public:
             std::bind(&ParallelGripperServer::handle_accepted, this, _1));
 
         tf_broadcaster_ =
-            std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+            std::make_shared<tf2_ros::TransformBroadcaster>(*this);
 
         sensor_to_j6_tf(0.0); // initial position
     }
@@ -45,7 +45,7 @@ private:
     // need motor angle feedback to compute tf
     rclcpp::Subscription<robot_interfaces::msg::GripperInfo>::SharedPtr gripper_info_subscriber_;
 
-    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
     std::atomic<int> grip_state_ = 0; ///< 4:GRIP_SUCCESS, 5:GRIP_MISSED
 
     rclcpp_action::GoalResponse handle_goal(const rclcpp_action::GoalUUID&,

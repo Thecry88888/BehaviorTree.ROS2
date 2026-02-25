@@ -18,13 +18,13 @@ public:
             std::bind(&TactileSensorServer::handle_service, this, _1, _2));
         
         tf_broadcaster_ =
-            std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+            std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     }
 
 private:
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr conn_pose_subscriber_;
     rclcpp::Service<btcpp_ros2_interfaces::srv::LocateObject>::SharedPtr service_;
-    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     void connector_pose_callback(const geometry_msgs::msg::Pose::SharedPtr msg) {
         // 2D information only

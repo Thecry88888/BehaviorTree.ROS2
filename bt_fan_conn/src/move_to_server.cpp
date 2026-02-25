@@ -34,14 +34,14 @@ public:
             std::bind(&MoveToServer::handle_cancel, this, _1),
             std::bind(&MoveToServer::handle_accepted, this, _1));
 
-        tf_buffer_ = std::make_unique<tf2_ros::Buffer>(this->get_clock());
+        tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->get_clock());
         tf_listener_ = std::make_shared<tf2_ros::TransformListener>(*tf_buffer_);
     }
 
 private:
     rclcpp::Publisher<geometry_msgs::msg::Pose>::SharedPtr cmd_pose_publisher_;
     rclcpp_action::Server<MoveTo>::SharedPtr action_server_;
-    std::unique_ptr<tf2_ros::Buffer> tf_buffer_;
+    std::shared_ptr<tf2_ros::Buffer> tf_buffer_;
     std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
     // Action Boilerplate

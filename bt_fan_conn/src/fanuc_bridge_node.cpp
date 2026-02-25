@@ -55,7 +55,7 @@ public:
             std::bind(&FanucBridgeNode::handle_accepted, this, _1));
 
         tf_broadcaster_ =
-            std::make_unique<tf2_ros::TransformBroadcaster>(*this);
+            std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     }
 
 private:
@@ -76,7 +76,7 @@ private:
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr cmd_pose_subscriber_;
     rclcpp_action::Server<FollowJointTrajectory>::SharedPtr action_server_;
 
-    std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     void handle_cmd_pose(const geometry_msgs::msg::Pose::SharedPtr msg) {
         double w, p, r;
