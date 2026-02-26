@@ -34,9 +34,6 @@ public:
         using namespace std::placeholders;
         check_connection_timer_ = this->create_wall_timer(
             1s, std::bind(&FanucBridgeNode::check_socket_connection, this));
-        
-        euler_state_timer_ = this->create_wall_timer(
-            100ms, std::bind(&FanucBridgeNode::get_euler_state, this));
 
         joint_state_timer_ = this->create_wall_timer(
             100ms, std::bind(&FanucBridgeNode::get_joint_state, this));
@@ -63,6 +60,7 @@ private:
     int clientSocket_;
     struct sockaddr_in clientAddress_;
     static constexpr int FANUC_PORT = 12000;
+    std::array<float, 6> current_joint_states_;
 
     struct CommandHeader {
         int robot_num;
@@ -71,7 +69,6 @@ private:
 
     rclcpp::TimerBase::SharedPtr check_connection_timer_;
     rclcpp::TimerBase::SharedPtr joint_state_timer_;
-    rclcpp::TimerBase::SharedPtr euler_state_timer_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr cmd_pose_subscriber_;
     rclcpp_action::Server<FollowJointTrajectory>::SharedPtr action_server_;
@@ -107,6 +104,8 @@ private:
     void execute(const std::shared_ptr<GoalHandle> goal_handle) {
         const auto goal = goal_handle->get_goal();
         auto result = std::make_shared<FollowJointTrajectory::Result>();
+        
+        const float TOLERANCE = 0.1f; 
 
         for (const auto& point : goal->trajectory.points) {
             if (goal_handle->is_canceling()) {
@@ -116,13 +115,35 @@ private:
                 return;
             }
 
-            std::array<float, 6> joint_angles;
+            std::array<float, 6> target_angles;
             for (size_t i = 0; i < 6; ++i) {
-                joint_angles[i] = static_cast<float>(point.positions[i] * RAD2DEG);
+                target_angles[i] = static_cast<float>(point.positions[i] * RAD2DEG);
             }
-            move_joint(joint_angles);
-            rclcpp::sleep_for(500ms); // 簡單節流，實際應根據 point.time_from_start 調整
+            move_joint(target_angles);
+
+            // 等待抵達目標點位
+            bool reached = false;
+            auto start_time = this->now();
+            
+            while (!reached && rclcpp::ok()) {
+                bool all_in_range = true;
+                for (size_t i = 0; i < 6; ++i) {
+                    if (std::abs(target_angles[i] - current_joint_states_[i]) > TOLERANCE) {
+                        all_in_range = false;
+                        break;
+                    }
+                }
+
+                if (all_in_range) {
+                    reached = true;
+                } else {
+                    rclcpp::sleep_for(std::chrono::milliseconds(100)); 
+                }
+            }
         }
+        result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
+        goal_handle->succeed(result);
+        RCLCPP_INFO(this->get_logger(), "軌跡執行成功完成");
     }
 
     void q_to_wpr(const geometry_msgs::msg::Quaternion& q, double& w, double& p, double& r) {
@@ -138,33 +159,6 @@ private:
 
         int override = static_cast<int>(value);
         send(clientSocket_, &override, sizeof(override), 0);
-    }
-
-    void get_euler_state() {
-        CommandHeader header = {0, CMD_GET_EULER_INFO};
-        send(clientSocket_, &header, sizeof(header), 0);
-
-        float values[6];
-        recv(clientSocket_, values, sizeof(values), 0);
-
-        geometry_msgs::msg::TransformStamped t;
-        t.header.stamp = this->get_clock()->now();
-        t.header.frame_id = "base_link";
-        t.child_frame_id = "link_6"; // parameterize?
-        t.transform.translation.x = values[0]/1000.0; // mm to m
-        t.transform.translation.y = values[1]/1000.0; // mm to m
-        t.transform.translation.z = values[2]/1000.0; // mm to m
-
-        tf2::Quaternion q;
-        // Z-Y-X intrinsic order
-        // euler[3]：roll（X 軸）euler[4]：pitch（Y 軸）euler[5]：yaw（Z 軸）
-        q.setRPY(
-            values[3] * DEG2RAD, // W (X-roll)
-            values[4] * DEG2RAD, // P (Y-pitch)
-            values[5] * DEG2RAD  // R (Z-yaw)
-        );
-        t.transform.rotation = tf2::toMsg(q);
-        tf_broadcaster_->sendTransform(t);
     }
 
     void get_joint_state() {
@@ -183,6 +177,9 @@ private:
         joint_state_msg.position.resize(6);
         for (size_t i = 0; i < 6; ++i) {
             joint_state_msg.position[i] = values[i] * DEG2RAD;
+        }
+        for (size_t i = 0; i < 6; ++i) {
+            current_joint_states_[i] = values[i];
         }
 
         joint_state_publisher_->publish(joint_state_msg);
