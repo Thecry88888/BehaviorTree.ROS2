@@ -105,7 +105,7 @@ private:
         const auto goal = goal_handle->get_goal();
         auto result = std::make_shared<FollowJointTrajectory::Result>();
         
-        const float TOLERANCE = 0.1f; 
+        const float TOLERANCE = 1.0f; 
 
         for (const auto& point : goal->trajectory.points) {
             if (goal_handle->is_canceling()) {
@@ -203,8 +203,6 @@ private:
             param[i] = joint_angles[i];
         }
         send(clientSocket_, param, sizeof(param), 0);
-
-        send_script(0);
     }
 
     void send_script(int script_id) {
