@@ -41,8 +41,8 @@ static const char* xml_text = R"(
         <Sequence>
             <PrintValue message="開始執行任務..."/>
             
-            <Timeout msec="15000">
-                <FollowPathAction action_name="move_action" target_pose="{target_pose}"/>
+            <Timeout msec="50000">
+                <FollowPathAction action_name="/move_action" target_pose="{target_pose}"/>
             </Timeout>
 
             <PrintValue message="全流程完成！"/>
@@ -63,7 +63,7 @@ int main(int argc, char** argv)
     // 註冊 FollowPath 節點
     RosNodeParams params;
     params.nh = nh;
-    params.default_port_value = "move_group"; // 這裡是 MoveIt Action Server 的名稱
+    params.default_port_value = "/move_action"; // 這裡是 MoveIt Action Server 的名稱
     
     #ifdef USE_FOLLOW_PATH_PLUGIN
         RegisterRosNode(factory, "../lib/libfollow_path_action_plugin.so", params);
@@ -73,15 +73,19 @@ int main(int argc, char** argv)
 
     auto tree = factory.createTreeFromText(xml_text);
 
-    auto action_client = rclcpp_action::create_client<moveit_msgs::action::MoveGroup>(nh, "move_group");
+    auto action_client = rclcpp_action::create_client<moveit_msgs::action::MoveGroup>(nh, "/move_action");
     action_client->wait_for_action_server();
 
     // --- 測試用：在黑板手動設定一個目標位姿 ---
     geometry_msgs::msg::Pose test_pose;
-    test_pose.position.x = 0.1; // m (依據您的 Server 設定)
-    test_pose.position.y = 0.05;
-    test_pose.position.z = 0.2;
-    test_pose.orientation.w = 1.0; 
+    test_pose.position.x = 0.5; // m (依據您的 Server 設定)
+    test_pose.position.y = 0;
+    test_pose.position.z = 0.1;
+    test_pose.orientation.x = -1;
+    test_pose.orientation.y = 0;
+    test_pose.orientation.z = 0;
+    test_pose.orientation.w = 0;
+
     tree.rootBlackboard()->set("target_pose", test_pose);
     // 執行迴圈
     NodeStatus status = NodeStatus::RUNNING;

@@ -59,15 +59,15 @@ def generate_launch_description():
     )
 
     # 4. 啟動行為樹執行節點 (BT Executor)
-    bt_executor_node = Node(
-        package="bt_fan_conn",
-        executable="follow_path_client",
-        output="screen",
-        # 行為樹節點也需要讀取 robot_description 才能與 MoveIt 通訊
-        parameters=[moveit_config.to_dict(),
-                    {"use_sim_time": False}
-        ] 
-    )
+    # bt_executor_node = Node(
+    #     package="bt_fan_conn",
+    #     executable="follow_path_client",
+    #     output="screen",
+    #     # 行為樹節點也需要讀取 robot_description 才能與 MoveIt 通訊
+    #     parameters=[moveit_config.to_dict(),
+    #                 {"use_sim_time": False}
+    #     ] 
+    # )
 
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare("lrmate_200id_model_description"), "lrmate_200id/rviz", "view_robot.rviz"]
@@ -93,7 +93,7 @@ def generate_launch_description():
         node_robot_state_publisher,
         run_move_group_node,
         fanuc_bridge_node,
-        bt_executor_node,
+        # bt_executor_node,
         rviz_node,
     ]
 
