@@ -39,7 +39,7 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
     
     constr.orientation_constraints.push_back(ori_con);
 
-    goal.request.group_name = "manipulator"; // 你的規劃組名稱
+    goal.request.group_name = "lrmate_200id"; // 你的規劃組名稱
     goal.request.num_planning_attempts = 5; // 最多嘗試 5 次規劃
     goal.request.allowed_planning_time = 1.0; // 允許規劃 1 秒
     goal.request.start_state.is_diff = true; // 從當前狀態開始規劃
