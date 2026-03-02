@@ -16,10 +16,10 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
     pos_con.header.frame_id = "base_link";
     pos_con.link_name = "link_6";
     
-    // 定義一個微小的目標區域 (例如 1mm 的方塊)
+    // 定義一個微小的目標區域
     shape_msgs::msg::SolidPrimitive box;
     box.type = shape_msgs::msg::SolidPrimitive::BOX;
-    box.dimensions = {0.01, 0.01, 0.01}; // 1mm 容差
+    box.dimensions = {0.02, 0.02, 0.02}; // 2cm 容差
     
     pos_con.constraint_region.primitives.push_back(box);
     pos_con.constraint_region.primitive_poses.push_back(target_pose.value());
@@ -32,9 +32,9 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
     ori_con.header.frame_id = "base_link";
     ori_con.link_name = "link_6";
     ori_con.orientation = target_pose.value().orientation;
-    ori_con.absolute_x_axis_tolerance = 0.01; // 弧度容差
-    ori_con.absolute_y_axis_tolerance = 0.01;
-    ori_con.absolute_z_axis_tolerance = 0.01;
+    ori_con.absolute_x_axis_tolerance = 0.0175; // 弧度容差
+    ori_con.absolute_y_axis_tolerance = 0.0175;
+    ori_con.absolute_z_axis_tolerance = 0.0175;
     ori_con.weight = 1.0;
     
     constr.orientation_constraints.push_back(ori_con);
@@ -42,6 +42,7 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
     goal.request.group_name = "manipulator"; // 你的規劃組名稱
     goal.request.num_planning_attempts = 5; // 最多嘗試 5 次規劃
     goal.request.allowed_planning_time = 1.0; // 允許規劃 1 秒
+    goal.request.start_state.is_diff = true; // 從當前狀態開始規劃
     goal.request.goal_constraints.push_back(constr);
 
     return true;

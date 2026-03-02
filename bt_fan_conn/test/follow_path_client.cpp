@@ -81,7 +81,7 @@ int main(int argc, char** argv)
     test_pose.position.x = 0.5; // m (依據您的 Server 設定)
     test_pose.position.y = 0;
     test_pose.position.z = 0.1;
-    test_pose.orientation.x = -1;
+    test_pose.orientation.x = 1;
     test_pose.orientation.y = 0;
     test_pose.orientation.z = 0;
     test_pose.orientation.w = 0;

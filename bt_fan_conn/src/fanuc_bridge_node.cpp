@@ -36,7 +36,7 @@ public:
             1s, std::bind(&FanucBridgeNode::check_socket_connection, this));
 
         joint_state_timer_ = this->create_wall_timer(
-            100ms, std::bind(&FanucBridgeNode::get_joint_state, this));
+            20ms, std::bind(&FanucBridgeNode::get_joint_state, this));
         
         joint_state_publisher_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
         
