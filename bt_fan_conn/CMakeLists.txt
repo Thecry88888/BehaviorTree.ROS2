@@ -20,6 +20,8 @@ find_package(robot_interfaces REQUIRED)
 find_package(control_msgs REQUIRED)
 find_package(moveit_msgs REQUIRED)
 find_package(shape_msgs REQUIRED)
+find_package(moveit_core REQUIRED)
+find_package(moveit_ros_planning REQUIRED)
 
 set(DEPS
   behaviortree_ros2
@@ -36,6 +38,8 @@ set(DEPS
   control_msgs
   moveit_msgs
   shape_msgs
+  moveit_core
+  moveit_ros_planning
 )
 
 # Action Server

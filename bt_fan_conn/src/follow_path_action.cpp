@@ -39,9 +39,14 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
     
     constr.orientation_constraints.push_back(ori_con);
 
-    goal.request.group_name = "lrmate_200id"; // 你的規劃組名稱
-    goal.request.num_planning_attempts = 5; // 最多嘗試 5 次規劃
-    goal.request.allowed_planning_time = 1.0; // 允許規劃 1 秒
+    goal.request.group_name = "lrmate_200id"; // 規劃組名稱
+    goal.request.pipeline_id = "pilz_industrial_motion_planner";
+    // 指定規劃器運動模式
+    // LIN: 笛卡兒直線運動 (TCP 走直線，姿態平滑 SLERP)
+    // PTP: 點對點關節運動
+    goal.request.planner_id = "LIN";
+    goal.request.num_planning_attempts = 1; // Pilz is deterministic
+    goal.request.allowed_planning_time = 2.0;
     goal.request.start_state.is_diff = true; // 從當前狀態開始規劃
     goal.request.goal_constraints.push_back(constr);
 
@@ -96,6 +101,7 @@ NodeStatus FollowPathAction::onFailure(ActionNodeErrorCode error)
 void FollowPathAction::onHalt()
 {
     RCLCPP_INFO(logger(), "%s: onHalt", name().c_str());
+    RosActionNode<moveit_msgs::action::MoveGroup>::onHalt();
 }
 
 // Plugin registration.
