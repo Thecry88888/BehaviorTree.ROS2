@@ -4,6 +4,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include <chrono>
+#include <sstream>
 
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
@@ -133,6 +134,9 @@ private:
 
             // FK 取得 link_6 to base_link 的 Pose
             const Eigen::Isometry3d& end_effector_state = kinematic_state_->getGlobalLinkTransform("link_6");
+            std::stringstream ss;
+            ss << "\n" << end_effector_state.rotation().format(Eigen::IOFormat(3, 0, ", ", "\n", "[", "]"));
+            RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
             std::array<float, 6> target_euler_pose;
             target_euler_pose[0] = static_cast<float>(end_effector_state.translation().x()*1000); // m to mm
             target_euler_pose[1] = static_cast<float>(end_effector_state.translation().y()*1000);

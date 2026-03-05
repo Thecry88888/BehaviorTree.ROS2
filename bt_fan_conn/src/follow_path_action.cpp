@@ -44,7 +44,7 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
     // 指定規劃器運動模式
     // LIN: 笛卡兒直線運動 (TCP 走直線，姿態平滑 SLERP)
     // PTP: 點對點關節運動
-    goal.request.planner_id = "LIN";
+    goal.request.planner_id = "PTP";
     goal.request.num_planning_attempts = 1; // Pilz is deterministic
     goal.request.allowed_planning_time = 2.0;
     goal.request.start_state.is_diff = true; // 從當前狀態開始規劃
