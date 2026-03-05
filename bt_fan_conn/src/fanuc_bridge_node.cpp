@@ -143,9 +143,17 @@ private:
             target_euler_pose[2] = static_cast<float>(end_effector_state.translation().z()*1000);
 
             Eigen::Vector3d euler_angles = end_effector_state.rotation().eulerAngles(2, 1, 0); // Z-Y-X intrinsic order
-            target_euler_pose[3] = static_cast<float>(euler_angles[2] * RAD2DEG);
+            target_euler_pose[3] = static_cast<float>(euler_angles[0] * RAD2DEG);
             target_euler_pose[4] = static_cast<float>(euler_angles[1] * RAD2DEG);
-            target_euler_pose[5] = static_cast<float>(euler_angles[0] * RAD2DEG);
+            target_euler_pose[5] = static_cast<float>(euler_angles[2] * RAD2DEG);
+            RCLCPP_INFO(this->get_logger(), "xyzwpr:%f, %f, %f, %f, %f, %f", 
+                    target_euler_pose[0],
+                    target_euler_pose[1],
+                    target_euler_pose[2],
+                    target_euler_pose[3],
+                    target_euler_pose[4],
+                    target_euler_pose[5]
+            ); 
 
             move(target_euler_pose);
 
