@@ -75,9 +75,9 @@ private:
 
         geometry_msgs::msg::TransformStamped t;
         t.header.stamp = this->get_clock()->now();
-        // boardcast base_link to fan_frame tf
-        // since we don't have camera to base_link tf and camera have 2D information only
-        t.header.frame_id = "base_link";
+        // boardcast world_frame to fan_frame tf
+        // since we don't have camera to world_frame tf and camera have 2D information only
+        t.header.frame_id = "lrmate_200id_world";
         t.child_frame_id = "fan_frame"; 
         t.transform.translation.x = fan_packet.values[1];
         t.transform.translation.y = fan_packet.values[2];

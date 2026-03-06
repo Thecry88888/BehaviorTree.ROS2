@@ -133,8 +133,10 @@ private:
             kinematic_state_->setJointGroupPositions(joint_model_group_, point.positions);
 
             // FK 取得 link_6 to base_link 的 Pose
-            const Eigen::Isometry3d& end_effector_state = kinematic_state_->getGlobalLinkTransform("link_6");
-            std::stringstream ss;
+            const Eigen::Isometry3d& end_effector_state = \
+                kinematic_state_->getGlobalLinkTransform("lrmate_200id_world").inverse() * kinematic_state_->getGlobalLinkTransform("link_6");
+            
+                std::stringstream ss;
             ss << "\n" << end_effector_state.rotation().format(Eigen::IOFormat(3, 0, ", ", "\n", "[", "]"));
             RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
             std::array<float, 6> target_euler_pose;

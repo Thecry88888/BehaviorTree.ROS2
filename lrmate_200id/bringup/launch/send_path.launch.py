@@ -89,12 +89,23 @@ def generate_launch_description():
         ],
     )
 
+    # lrmate_200id_world_frame = Node(
+    #     package='tf2_ros',
+    #     executable='static_transform_publisher',
+    #     arguments=[
+    #         '--x', '0', '--y', '0', '--z', '0.169',
+    #         '--yaw', '0', '--pitch', '0', '--roll',
+    #         '0', '--frame-id', 'base_link', '--child-frame-id', 'lrmate_200id_world'
+    #     ]
+    # )
+
     nodes = [
         node_robot_state_publisher,
         run_move_group_node,
         fanuc_bridge_node,
         # bt_executor_node,
         rviz_node,
+        # lrmate_200id_world_frame,
     ]
 
     return LaunchDescription(

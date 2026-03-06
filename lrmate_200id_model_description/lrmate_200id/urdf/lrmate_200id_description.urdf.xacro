@@ -112,6 +112,7 @@
       izz="3.1628E-05"
   />
 
+  <link name="lrmate_200id_world"/>
   <link name="ft_frame"/>
   <link name="tool0"/>
 
@@ -121,6 +122,13 @@
     <child link="base_link"/>
     <origin xyz="0 0 0" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
+  </joint>
+
+  <!-- This joint is used to transform from the world frame to the robot's base frame -->
+  <joint name="base_to_fanuc_world" type="fixed">
+    <parent link="base_link"/>
+    <child link="lrmate_200id_world"/>
+    <origin xyz="0 0 0.169" rpy="0 0 0"/>
   </joint>
 
   <!-- joints - main serial chain -->
