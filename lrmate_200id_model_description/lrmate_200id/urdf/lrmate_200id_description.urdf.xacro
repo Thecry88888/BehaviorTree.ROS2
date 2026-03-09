@@ -23,7 +23,7 @@
 
   <xacro:create_link
       link_name="link_1"
-      xyz_offset="0 0 0"
+      xyz_offset="0 0 -0.126259"
       rpy_offset="0 0 0"
       mesh_package="lrmate_200id_model_description/lrmate_200id"
       mesh_name="link_1"
@@ -68,7 +68,7 @@
 
   <xacro:create_link
       link_name="link_4"
-      xyz_offset="0 0 0"
+      xyz_offset="0.088001 0 0.035027"
       rpy_offset="0 0 0"
       mesh_package="lrmate_200id_model_description/lrmate_200id"
       mesh_name="link_4"
@@ -83,7 +83,7 @@
 
   <xacro:create_link
       link_name="link_5"
-      xyz_offset="0 0 0"
+      xyz_offset="-0.001599 0 0.035027"
       rpy_offset="0 0 0"
       mesh_package="lrmate_200id_model_description/lrmate_200id"
       mesh_name="link_5"
@@ -98,7 +98,7 @@
 
   <xacro:create_link
       link_name="link_6"
-      xyz_offset="0 0 0"
+      xyz_offset="0.048401 0 0.035027"
       rpy_offset="0 0 0"
       mesh_package="lrmate_200id_model_description/lrmate_200id"
       mesh_name="link_6"
@@ -128,24 +128,24 @@
   <joint name="base_to_fanuc_world" type="fixed">
     <parent link="base_link"/>
     <child link="lrmate_200id_world"/>
-    <origin xyz="0 0 0.169" rpy="0 0 0"/>
+    <origin xyz="0 0 0.33" rpy="0 0 0"/>
   </joint>
 
   <!-- joints - main serial chain -->
-  <joint name="joint_1" type="revolute">
+  <joint name="joint_1" type="revolute">k
     <parent link="base_link"/>
     <child link="link_1"/>
-    <origin xyz="0 0 0.042741" rpy="0 0 0"/>
+    <origin xyz="0 0 0.169" rpy="0 0 0"/>
     <axis xyz="0 0 1"/>
     <!-- according to official specs ${340.0 / 2.0 * pi / 180.0}-->
-    <limit effort="16.6" lower="-2.9671" upper="2.9671" velocity="5.93"/>
+    <limit effort="16.6" lower="${radians(-170)}" upper="2.9671" velocity="5.93"/>
   </joint>
 
   <joint name="joint_2" type="revolute">
     <parent link="link_1"/>
     <child link="link_2"/>
-    <origin xyz="0.05 0 0.28726" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
+    <origin xyz="0.05 0 0.161" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
     <limit effort="16.6" lower="-1.7453" upper="2.5307" velocity="4.28"/>
   </joint>
 
@@ -160,7 +160,7 @@
   <joint name="joint_4" type="revolute">
     <parent link="link_3"/>
     <child link="link_4"/>
-    <origin xyz="0.088001 0 0.035027" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
     <axis xyz="-1 0 0"/>
     <limit effort="16.6" lower="-3.3161" upper="3.3161" velocity="6.63"/>
   </joint>
@@ -168,7 +168,7 @@
   <joint name="joint_5" type="revolute">
     <parent link="link_4"/>
     <child link="link_5"/>
-    <origin xyz="0.2454 0 0" rpy="0 0 0"/>
+    <origin xyz="0.335 0 0" rpy="0 0 0"/>
     <axis xyz="0 -1 0"/>
     <limit effort="16.6" lower="-2.1817" upper="2.1817" velocity="4.36"/>
   </joint>
@@ -176,7 +176,7 @@
   <joint name="joint_6" type="revolute">
     <parent link="link_5"/>
     <child link="link_6"/>
-    <origin xyz="0.05 0 0" rpy="1.5708 0 0"/>
+    <origin xyz="0 0 0" rpy="1.5708 0 0"/>
     <axis xyz="-1 0 0"/>
     <limit effort="9.4" lower="-6.2832" upper="6.2832" velocity="12.57"/>
   </joint>
