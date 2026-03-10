@@ -243,6 +243,7 @@ private:
         for (size_t i = 0; i < 6; ++i) {
             joint_state_msg.position[i] = values[i] * DEG2RAD;
         }
+        joint_state_msg.position[2] +=  joint_state_msg.position[1];
 
         joint_state_publisher_->publish(joint_state_msg);
     }
