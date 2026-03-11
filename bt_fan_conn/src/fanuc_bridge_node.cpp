@@ -134,7 +134,7 @@ private:
 
             // FK 取得 link_6 to base_link 的 Pose
             const Eigen::Isometry3d& end_effector_state = \
-                kinematic_state_->getGlobalLinkTransform("lrmate_200id_world").inverse() * kinematic_state_->getGlobalLinkTransform("link_6");
+                kinematic_state_->getGlobalLinkTransform("lrmate_200id_world").inverse() * kinematic_state_->getGlobalLinkTransform("tool0");
             
                 std::stringstream ss;
             ss << "\n" << end_effector_state.rotation().format(Eigen::IOFormat(3, 0, ", ", "\n", "[", "]"));
@@ -144,7 +144,7 @@ private:
             target_euler_pose[1] = static_cast<float>(end_effector_state.translation().y()*1000);
             target_euler_pose[2] = static_cast<float>(end_effector_state.translation().z()*1000);
 
-            Eigen::Vector3d euler_angles = end_effector_state.rotation().eulerAngles(2, 1, 0); // Z-Y-X intrinsic order
+            Eigen::Vector3d euler_angles = end_effector_state.rotation().eulerAngles(0, 1, 2); // Z-Y-X intrinsic order
             target_euler_pose[3] = static_cast<float>(euler_angles[0] * RAD2DEG);
             target_euler_pose[4] = static_cast<float>(euler_angles[1] * RAD2DEG);
             target_euler_pose[5] = static_cast<float>(euler_angles[2] * RAD2DEG);
