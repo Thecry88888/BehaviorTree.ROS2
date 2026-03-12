@@ -123,7 +123,7 @@ private:
 
             kinematic_state_->setJointGroupPositions(joint_model_group_, point.positions);
 
-            // FK 取得 link_6 to base_link 的 Pose
+            // FK 取得 tool0 to base_link 的 Pose
             const Eigen::Isometry3d& end_effector_state = \
                 kinematic_state_->getGlobalLinkTransform("lrmate_200id_world").inverse() * kinematic_state_->getGlobalLinkTransform("tool0");
             

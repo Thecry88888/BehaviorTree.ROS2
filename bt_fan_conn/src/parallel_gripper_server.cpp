@@ -140,7 +140,7 @@ private:
         // get motor angle to update tf
         sensor_to_j6_tf(msg->angle);
         // manual test command:
-        // ros2 run tf2_ros tf2_echo link_6 tactile_sensor_frame
+        // ros2 run tf2_ros tf2_echo tool0 tactile_sensor_frame
     }
 
     void sensor_to_j6_tf(float motor_deg) {
@@ -152,7 +152,7 @@ private:
         float dz = L1 * cos(rad) + L2 * cos(asin(sin(rad)/L2)) + offset;
         geometry_msgs::msg::TransformStamped t;
         t.header.stamp = this->get_clock()->now();
-        t.header.frame_id = "link_6";
+        t.header.frame_id = "tool0";
         t.child_frame_id = "tactile_sensor_frame";
         t.transform.translation.x = 0.0;
         t.transform.translation.y = -dz/1000.0;

@@ -16,9 +16,9 @@ public:
         return {
             BT::InputPort<std::string>("target_frame"),   // 目標frame (e.g., "fan_frame")
             BT::InputPort<std::string>("tool_frame"),     // 機器人哪部分去 (e.g., "gipper_center_frame")
-            BT::InputPort<std::string>("base_frame"),     // 參考座標 (e.g., "base_link")
+            BT::InputPort<std::string>("base_frame"),     // 參考座標 (e.g., "lrmate_200id_world")
             BT::InputPort<std::vector<double>>("offset"), // 可選偏移 [x, y, z, r, p, y]
-            BT::OutputPort<geometry_msgs::msg::Pose>("target_pose") // 算出的 link_6 座標
+            BT::OutputPort<geometry_msgs::msg::Pose>("target_pose") // 算出的座標
         };
     }
 
@@ -37,21 +37,21 @@ public:
 
         try {
             // when tool = target, tool can grip target
-            // get T_base_target = T_base_link6 * T_link6_tool
-            // -> T_base_link6 = T_base_target * (T_link6_tool)^-1
+            // get T_base_target = T_base_tool0 * T_tool0_target
+            // -> T_base_tool0 = T_base_target * (T_tool0_tool)^-1
 
-            // 取得目標在基座下的位置 T_base_target
+            // 取得目標在world下的位置 T_base_target
             auto t_base_target = tf_buffer_->lookupTransform(base, target, tf2::TimePointZero);
             tf2::Transform T_base_target;
             tf2::fromMsg(t_base_target.transform, T_base_target);
 
-            // 取得工具相對於 Flange (link_6) 的固定關係 T_link6_tool
-            auto t_link6_tool = tf_buffer_->lookupTransform("link_6", tool, tf2::TimePointZero);
-            tf2::Transform T_link6_tool;
-            tf2::fromMsg(t_link6_tool.transform, T_link6_tool);
+            // 取得工具相對於 Flange (tool0) 的固定關係 T_tool0_tool
+            auto t_tool0_tool = tf_buffer_->lookupTransform("tool0", tool, tf2::TimePointZero);
+            tf2::Transform T_tool0_tool;
+            tf2::fromMsg(t_tool0_tool.transform, T_tool0_tool);
 
-            // T_base_link6 = T_base_target * (T_link6_tool)^-1
-            tf2::Transform T_base_link6 = T_base_target * T_link6_tool.inverse();
+            // T_base_tool0 = T_base_target * (T_tool0_tool)^-1
+            tf2::Transform T_base_tool0 = T_base_target * T_tool0_tool.inverse();
 
             // 加上 Approach 偏移，例如在目標上方 5cm (選擇性)
             std::vector<double> offset;
@@ -61,11 +61,11 @@ public:
                 tf2::Quaternion q_off;
                 q_off.setRPY(offset[3], offset[4], offset[5]);
                 T_offset.setRotation(q_off);
-                T_base_link6 = T_base_link6 * T_offset; // 局部座標系偏移
+                T_base_tool0 = T_base_tool0 * T_offset; // 局部座標系偏移
             }
 
             geometry_msgs::msg::Pose goal;
-            tf2::toMsg(T_base_link6, goal);
+            tf2::toMsg(T_base_tool0, goal);
             setOutput("target_pose", goal);
 
             return BT::NodeStatus::SUCCESS;
@@ -84,7 +84,7 @@ static const char* test_xml = R"(
     <BehaviorTree ID="TestCompute">
         <ComputeTargetPose target_frame="fan_frame" 
                            tool_frame="tactile_sensor_frame"
-                            base_frame="base_link"
+                            base_frame="lrmate_200id_world"
                            target_pose="{my_test_pose}"/>
     </BehaviorTree>
 </root>
@@ -97,9 +97,9 @@ int main(int argc, char** argv)
     auto tf_buffer = std::make_shared<tf2_ros::Buffer>(nh->get_clock());
     auto tf_listener = std::make_shared<tf2_ros::TransformListener>(*tf_buffer, nh);
     // --- 測試用：廣播一個固定的 TF 來模擬 fan_frame 和 tactile_sensor_frame 的位置關係 ---
-    // ros2 run tf2_ros static_transform_publisher -0.0048 0.5 -0.1 0 0 0 base_link fan_frame
+    // ros2 run tf2_ros static_transform_publisher -0.0048 0.5 -0.1 0 0 0 lrmate_200id_world fan_frame
     // and
-    // ros2 run tf2_ros static_transform_publisher 0.0 -0.005 -0.19412 0 0 0 link_6 tactile_sensor_frame
+    // ros2 run tf2_ros static_transform_publisher 0.0 -0.005 -0.19412 0 0 0 tool0 tactile_sensor_frame
 
     BehaviorTreeFactory factory;
     factory.registerBuilder<ComputeTargetPose>(

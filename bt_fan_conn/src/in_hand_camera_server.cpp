@@ -83,7 +83,7 @@ private:
     void camera_to_j6_tf() {
         geometry_msgs::msg::TransformStamped t;
         t.header.stamp = this->get_clock()->now();
-        t.header.frame_id = "link_6";
+        t.header.frame_id = "tool0";
         t.child_frame_id = "in_hand_camera_frame";
         t.transform.translation.x = 0.066; // meter
         t.transform.translation.y = 0.04025;

@@ -87,9 +87,9 @@ private:
             geometry_msgs::msg::TransformStamped t;
             try {
                 t = tf_buffer_->lookupTransform(
-                    "lrmate_200id_world", "link_6", tf2::TimePointZero); // newest
+                    "lrmate_200id_world", "tool0", tf2::TimePointZero); // newest
                 // manual test command:
-                // ros2 run tf2_ros static_transform_publisher --x 100 --y 50 --z 200 --yaw 0 --pitch 0 --roll 0 --frame-id lrmate_200id_world --child-frame-id link_6
+                // ros2 run tf2_ros static_transform_publisher --x 100 --y 50 --z 200 --yaw 0 --pitch 0 --roll 0 --frame-id lrmate_200id_world --child-frame-id tool0
                 // same as move_to_client test pose
             }
             catch (tf2::TransformException &ex) {

@@ -14,7 +14,7 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
     // 位置約束 (Position Constraint)
     moveit_msgs::msg::PositionConstraint pos_con;
     pos_con.header.frame_id = "lrmate_200id_world";
-    pos_con.link_name = "link_6";
+    pos_con.link_name = "tool0";
     
     // 定義一個微小的目標區域
     shape_msgs::msg::SolidPrimitive box;
@@ -30,7 +30,7 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
     // 姿勢約束 (Orientation Constraint)
     moveit_msgs::msg::OrientationConstraint ori_con;
     ori_con.header.frame_id = "lrmate_200id_world";
-    ori_con.link_name = "link_6";
+    ori_con.link_name = "tool0";
     ori_con.orientation = target_pose.value().orientation;
     ori_con.absolute_x_axis_tolerance = 0.0175; // 弧度容差
     ori_con.absolute_y_axis_tolerance = 0.0175;
