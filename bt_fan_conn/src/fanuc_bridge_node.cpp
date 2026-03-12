@@ -9,7 +9,6 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/pose.hpp"
-#include "tf2_ros/transform_broadcaster.h"
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
@@ -47,9 +46,6 @@ public:
         check_connection_timer_ = this->create_wall_timer(
             1s, std::bind(&FanucBridgeNode::check_socket_connection, this));
 
-        euler_state_timer_ = this->create_wall_timer(
-            20ms, std::bind(&FanucBridgeNode::get_euler_state, this));
-
         joint_state_timer_ = this->create_wall_timer(
             20ms, std::bind(&FanucBridgeNode::get_joint_state, this));
         
@@ -65,9 +61,6 @@ public:
             std::bind(&FanucBridgeNode::handle_goal, this, _1, _2),
             std::bind(&FanucBridgeNode::handle_cancel, this, _1),
             std::bind(&FanucBridgeNode::handle_accepted, this, _1));
-
-        tf_broadcaster_ =
-            std::make_shared<tf2_ros::TransformBroadcaster>(*this);
     }
 
 private:
@@ -76,6 +69,7 @@ private:
     struct sockaddr_in clientAddress_;
     static constexpr int FANUC_PORT = 12000;
     std::array<float, 6> current_euler_states_; // x, y, z, roll(w), pitch(p), yaw(r)
+    std::array<float, 6> current_joint_angle_; // degrees
 
     struct CommandHeader {
         int robot_num;
@@ -83,14 +77,11 @@ private:
     } __attribute__((packed));
 
     rclcpp::TimerBase::SharedPtr check_connection_timer_;
-    rclcpp::TimerBase::SharedPtr euler_state_timer_;
     rclcpp::TimerBase::SharedPtr joint_state_timer_;
     rclcpp::TimerBase::SharedPtr init_timer_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr cmd_pose_subscriber_;
     rclcpp_action::Server<FollowJointTrajectory>::SharedPtr action_server_;
-
-    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
 
     std::shared_ptr<robot_model_loader::RobotModelLoader> robot_model_loader_;
     moveit::core::RobotModelPtr kinematic_model_;
@@ -161,12 +152,11 @@ private:
 
             // 等待抵達目標點位
             bool reached = false;
-            auto start_time = this->now();
             
             while (!reached && rclcpp::ok()) {
                 bool all_in_range = true;
-                for (size_t i = 0; i < 6; ++i) {
-                    if (std::abs(target_euler_pose[i] - current_euler_states_[i]) > TOLERANCE) {
+                for (size_t i = 0; i < point.positions.size(); ++i) {
+                    if (std::abs(current_joint_angle_[i] - point.positions[i] * RAD2DEG) > TOLERANCE) {
                         all_in_range = false;
                         break;
                     }
@@ -220,18 +210,11 @@ private:
         int override = static_cast<int>(value);
         send(clientSocket_, &override, sizeof(override), 0);
     }
-    void get_euler_state() {
-        CommandHeader header = {0, CMD_GET_EULER_INFO};
-        send(clientSocket_, &header, sizeof(header), 0);
-        recv(clientSocket_, current_euler_states_.data(), sizeof(current_euler_states_), 0);
-    }
 
     void get_joint_state() {
         CommandHeader header = {0, CMD_GET_JOINT_INFO};
         send(clientSocket_, &header, sizeof(header), 0);
-
-        float values[6];
-        recv(clientSocket_, values, sizeof(values), 0);
+        recv(clientSocket_, current_joint_angle_.data(), sizeof(current_joint_angle_), 0);
 
         auto joint_state_msg = sensor_msgs::msg::JointState();
         joint_state_msg.header.stamp = this->get_clock()->now();
@@ -241,9 +224,9 @@ private:
         };
         joint_state_msg.position.resize(6);
         for (size_t i = 0; i < 6; ++i) {
-            joint_state_msg.position[i] = values[i] * DEG2RAD;
+            joint_state_msg.position[i] = current_joint_angle_[i] * DEG2RAD;
         }
-        joint_state_msg.position[2] +=  joint_state_msg.position[1];
+        joint_state_msg.position[2] +=  joint_state_msg.position[1];  // j3 是相對於 j2 的角度，需加上 j2 的角度才是絕對角度
 
         joint_state_publisher_->publish(joint_state_msg);
     }
@@ -252,9 +235,6 @@ private:
         CommandHeader header = {0, CMD_MOVE};
         send(clientSocket_, &header, sizeof(header), 0);
         send(clientSocket_, euler_pose.data(), sizeof(euler_pose), 0);
-
-        // script 指令
-        send_script(0);
     }
 
     void move_joint(const std::array<float, 6>& joint_angles) {
