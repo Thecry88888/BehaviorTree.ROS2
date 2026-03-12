@@ -155,8 +155,20 @@ private:
             
             while (!reached && rclcpp::ok()) {
                 bool all_in_range = true;
-                for (size_t i = 0; i < point.positions.size(); ++i) {
-                    if (std::abs(current_joint_angle_[i] - point.positions[i] * RAD2DEG) > TOLERANCE) {
+                auto current_angles = current_joint_angle_;
+
+                for (size_t i = 0; i < 3; ++i) {
+                    double target_deg;
+                    if (i == 2) {
+                        target_deg = (point.positions[2] - point.positions[1]) * RAD2DEG;
+                    }
+                    else {
+                        target_deg = point.positions[i] * RAD2DEG;
+                    }
+
+                    if (std::abs(current_angles[i] - target_deg) > TOLERANCE) {
+                        RCLCPP_INFO(this->get_logger(), "Joint %zu 未達標: curr=%f, target=%f, diff=%f", 
+                                i+1, current_angles[i], target_deg, std::abs(current_angles[i] - target_deg));
                         all_in_range = false;
                         break;
                     }
