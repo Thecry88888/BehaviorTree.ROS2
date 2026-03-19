@@ -21,6 +21,13 @@ def generate_launch_description():
     gui = LaunchConfiguration("gui")
     moveit_config = (
         MoveItConfigsBuilder("lrmate_200id", package_name="lrmate_200id_moveit_config")
+        .robot_description(file_path="config/lrmate_200id.urdf.xacro")
+        .robot_description_semantic(file_path="config/lrmate_200id.srdf")
+        .trajectory_execution(file_path="config/moveit_controllers.yaml")   
+        .planning_scene_monitor(
+            publish_robot_description=True, 
+            publish_robot_description_semantic=True
+        )
         .planning_pipelines(
             default_planning_pipeline="pilz_industrial_motion_planner",
             pipelines=["pilz_industrial_motion_planner"]
