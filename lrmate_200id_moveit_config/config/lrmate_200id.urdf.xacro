@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="lrmate_200id">
+    <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+    <xacro:arg name="prefix" default="" />
+
+    <!-- Import lrmate_200id urdf file -->
+    <xacro:include filename="$(find lrmate_200id_model_description)/lrmate_200id/urdf/lrmate_200id_description.urdf.xacro" />
+
+    <!-- Import control_xacro -->
+    <xacro:include filename="lrmate_200id.ros2_control.xacro" />
+    <!-- create link fixed to the "world" -->
+    <link name="world"/>
+    <xacro:lrmate_200id_description/>
+    <!--xacro:lrmate_200id_ros2_control name="FakeSystem" initial_positions_file="$(arg initial_positions_file)"/-->
+
+</robot>

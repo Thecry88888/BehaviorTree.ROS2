@@ -41,6 +41,8 @@ bool FollowPathAction::setGoal(RosActionNode::Goal& goal)
 
     goal.request.group_name = "lrmate_200id"; // 規劃組名稱
     goal.request.pipeline_id = "pilz_industrial_motion_planner";
+    goal.request.max_velocity_scaling_factor = 0.1;
+    goal.request.max_acceleration_scaling_factor = 0.1;
     // 指定規劃器運動模式
     // LIN: 笛卡兒直線運動 (TCP 走直線，姿態平滑 SLERP)
     // PTP: 點對點關節運動

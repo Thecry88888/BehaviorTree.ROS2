@@ -1,4 +1,5 @@
 import os
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
@@ -6,7 +7,6 @@ from launch_ros.actions import Node
 from moveit_configs_utils import MoveItConfigsBuilder
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
 from launch_ros.substitutions import FindPackageShare
-
 
 def generate_launch_description():
     declared_arguments = []
@@ -19,18 +19,22 @@ def generate_launch_description():
     )
     # Initialize Arguments
     gui = LaunchConfiguration("gui")
-
     moveit_config = (
-        MoveItConfigsBuilder("lrmate_200id", package_name="lrmate_200id")
-        .robot_description(file_path="urdf/lrmate_200id.urdf.xacro")
-        .robot_description_semantic(file_path="config/lrmate_200id.srdf")
-        .trajectory_execution(file_path="config/moveit_controllers.yaml")   
-        .planning_scene_monitor(
-            publish_robot_description=True, 
-            publish_robot_description_semantic=True
+        MoveItConfigsBuilder("lrmate_200id", package_name="lrmate_200id_moveit_config")
+        .planning_pipelines(
+            default_planning_pipeline="pilz_industrial_motion_planner",
+            pipelines=["pilz_industrial_motion_planner"]
         )
-        .planning_pipelines(pipelines=["ompl", "chomp", "pilz_industrial_motion_planner"])
         .to_moveit_configs()
+    )
+
+    run_move_group_node = Node(
+        package="moveit_ros_move_group",
+        executable="move_group",
+        output="screen",
+        parameters=[
+            moveit_config.to_dict(),
+        ],
     )
 
     node_robot_state_publisher = Node(
@@ -43,14 +47,7 @@ def generate_launch_description():
         ]
     )
 
-    run_move_group_node = Node(
-        package="moveit_ros_move_group",
-        executable="move_group",
-        output="screen",
-        parameters=[moveit_config.to_dict()],
-    )
-
-    # 3. 啟動你的 Fanuc Node (作為 FollowJointTrajectory 的 Server)
+    # 啟動 Fanuc Node (作為 FollowJointTrajectory 的 Server)
     fanuc_bridge_node = Node(
         package="bt_fan_conn",
         executable="fanuc_bridge_node",
@@ -58,7 +55,7 @@ def generate_launch_description():
         parameters=[{"use_sim_time": False}]
     )
 
-    # 4. 啟動行為樹執行節點 (BT Executor)
+    # 啟動行為樹執行節點 (BT Executor)
     # bt_executor_node = Node(
     #     package="bt_fan_conn",
     #     executable="follow_path_client",
@@ -89,23 +86,12 @@ def generate_launch_description():
         ],
     )
 
-    # lrmate_200id_world_frame = Node(
-    #     package='tf2_ros',
-    #     executable='static_transform_publisher',
-    #     arguments=[
-    #         '--x', '0', '--y', '0', '--z', '0.169',
-    #         '--yaw', '0', '--pitch', '0', '--roll',
-    #         '0', '--frame-id', 'base_link', '--child-frame-id', 'lrmate_200id_world'
-    #     ]
-    # )
-
     nodes = [
         node_robot_state_publisher,
         run_move_group_node,
         fanuc_bridge_node,
         # bt_executor_node,
         rviz_node,
-        # lrmate_200id_world_frame,
     ]
 
     return LaunchDescription(

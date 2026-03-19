@@ -1,0 +1,23 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: lrmate_200id_model_description
+    relative_path: lrmate_200id/urdf/lrmate_200id_description.urdf
+  srdf:
+    relative_path: config/lrmate_200id.srdf
+  package_settings:
+    author_name: jamesH
+    author_email: n96134637@gs.ncku.edu.tw
+    generated_timestamp: 1773729629
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position

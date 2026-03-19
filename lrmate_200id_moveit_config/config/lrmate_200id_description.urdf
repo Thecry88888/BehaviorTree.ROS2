@@ -1,0 +1,227 @@
+<?xml version="1.0"?>
+<robot name="lrmate_200id">
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/meshes/visual/link_0.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.7921 0.8196 0.9333 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/collision/link_0.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="4.8532"/>
+      <inertia ixx="0.02198" ixy="0.0001185" ixz="0.0001430" iyy="0.02382" iyz="0.0001" izz="0.02280"/>
+    </inertial>
+  </link>
+
+  <link name="link_1">
+    <visual>
+      <origin xyz="0 0 -0.287259" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/visual/link_1.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.7921 0.8196 0.9333 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.287259" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/collision/link_1.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="14.3548"/>
+      <inertia ixx="0.9059" ixy="-0.0006305" ixz="-0.1324" iyy="0.9590" iyz="-0.0008315" izz="0.1326"/>
+    </inertial>
+  </link>
+
+  <link name="link_2">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/visual/link_2.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.7921 0.8196 0.9333 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/collision/link_2.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="6.3613"/>
+      <inertia ixx="0.10665127657" ixy="-0.00008067" ixz="-0.001451" iyy="0.0870" iyz="0.0005574" izz="0.03170"/>
+    </inertial>
+  </link>
+
+  <link name="link_3">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/visual/link_3.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.7921 0.8196 0.9333 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/collision/link_3.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="2.3942"/>
+      <inertia ixx="0.00633472848658925" ixy="-4.9504E-05" ixz="-0.0007613" iyy="0.007328" iyz="-6.6472E-05" izz="0.007260"/>
+    </inertial>
+  </link>
+
+  <link name="link_4">
+    <visual>
+      <origin xyz="0.088001 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/visual/link_4.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.7921 0.8196 0.9333 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.088001 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/collision/link_4.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.5"/>
+      <inertia ixx="0.005" ixy="0" ixz="0" iyy="0.005" iyz="0" izz="0.005"/>
+    </inertial>
+  </link>
+
+  <link name="link_5">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/visual/link_5.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.7921 0.8196 0.9333 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/collision/link_5.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="1.2"/>
+      <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.002" iyz="0" izz="0.002"/>
+    </inertial>
+  </link>
+
+  <link name="link_6">
+    <visual>
+      <origin xyz="-0.03 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/visual/link_6.stl" scale="0.025 0.025 0.025"/>
+      </geometry>
+      <material name="">
+        <color rgba="0.7921 0.8196 0.9333 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="-0.03 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://lrmate_200id_model_description/lrmate_200id/meshes/collision/link_6.stl" scale="0.025 0.025 0.025"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.09321"/>
+      <inertia ixx="5.2654E-05" ixy="3.9145E-14" ixz="3.4366E-08" iyy="3.1586E-05" iyz="2.7569E-11" izz="3.1628E-05"/>
+    </inertial>
+  </link>
+
+  <link name="lrmate_200id_world"/>
+  <link name="flange"/>
+  <link name="tool0"/>
+
+  <joint name="base_to_fanuc_world" type="fixed">
+    <parent link="base_link"/>
+    <child link="lrmate_200id_world"/>
+    <origin xyz="0 0 0.33" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="joint_1" type="revolute">
+    <parent link="base_link"/>
+    <child link="link_1"/>
+    <origin xyz="0 0 0.33" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="16.6" lower="-2.96706" upper="2.9671" velocity="5.93"/>
+  </joint>
+
+  <joint name="joint_2" type="revolute">
+    <parent link="link_1"/>
+    <child link="link_2"/>
+    <origin xyz="0.050 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit effort="16.6" lower="-1.7453" upper="2.5307" velocity="4.28"/>
+  </joint>
+
+  <joint name="joint_3" type="revolute">
+    <parent link="link_2"/>
+    <child link="link_3"/>
+    <origin xyz="0 0 0.33" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <limit effort="16.6" lower="-1.2217" upper="3.5779" velocity="7.33"/>
+  </joint>
+
+  <joint name="joint_4" type="revolute">
+    <parent link="link_3"/>
+    <child link="link_4"/>
+    <origin xyz="0 0 0.035027" rpy="0 0 0"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="16.6" lower="-3.3161" upper="3.3161" velocity="6.63"/>
+  </joint>
+
+  <joint name="joint_5" type="revolute">
+    <parent link="link_4"/>
+    <child link="link_5"/>
+    <origin xyz="0.335 0 0" rpy="0 0 0"/>
+    <axis xyz="0 -1 0"/>
+    <limit effort="16.6" lower="-2.1817" upper="2.1817" velocity="4.36"/>
+  </joint>
+
+  <joint name="joint_6" type="revolute">
+    <parent link="link_5"/>
+    <child link="link_6"/>
+    <origin xyz="0.080 0 0" rpy="0 0 0"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="9.4" lower="-6.2832" upper="6.2832" velocity="12.57"/>
+  </joint>
+
+  <joint name="link_6-flange" type="fixed">
+    <parent link="link_6"/>
+    <child link="flange"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <joint name="flange-tool0" type="fixed">
+    <parent link="flange"/>
+    <child link="tool0"/>
+    <origin xyz="0 0 0" rpy="3.14159265359 -1.57079632679 0"/>
+  </joint>
+
+</robot>
