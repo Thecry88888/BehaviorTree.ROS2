@@ -1,23 +1,15 @@
 #include "netinet/in.h"
-#include "fcntl.h"
 #include "unistd.h"
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp_action/rclcpp_action.hpp"
 #include <chrono>
-#include <sstream>
 
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "geometry_msgs/msg/transform_stamped.hpp"
 #include "geometry_msgs/msg/pose.hpp"
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
-#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 #include "control_msgs/action/follow_joint_trajectory.hpp"
-#include "trajectory_msgs/msg/joint_trajectory.hpp"
-#include <moveit/robot_model_loader/robot_model_loader.h>
-#include <moveit/robot_state/robot_state.h>
 
 #include "bt_fan_conn/command_encode.hpp"
+#include "bt_fan_conn/kinematics_utils.hpp"
 
 #define DEG2RAD (M_PI / 180.0)
 #define RAD2DEG (180.0 / M_PI)
@@ -40,11 +32,15 @@ public:
             std::chrono::milliseconds(1),
             [this]() {
                 init_timer_->cancel();
-                init_moveit();
+                kinematics_utils_ = std::make_unique<KinematicsUtils>(this->shared_from_this(), 
+                "lrmate_200id", "lrmate_200id_world", "tool0");
             });
 
         check_connection_timer_ = this->create_wall_timer(
             1s, std::bind(&FanucBridgeNode::check_socket_connection, this));
+
+        euler_state_timer_ = this->create_wall_timer(
+            20ms, std::bind(&FanucBridgeNode::get_euler_state, this));
 
         joint_state_timer_ = this->create_wall_timer(
             20ms, std::bind(&FanucBridgeNode::get_joint_state, this));
@@ -77,16 +73,14 @@ private:
     } __attribute__((packed));
 
     rclcpp::TimerBase::SharedPtr check_connection_timer_;
+    rclcpp::TimerBase::SharedPtr euler_state_timer_;
     rclcpp::TimerBase::SharedPtr joint_state_timer_;
     rclcpp::TimerBase::SharedPtr init_timer_;
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_publisher_;
     rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr cmd_pose_subscriber_;
     rclcpp_action::Server<FollowJointTrajectory>::SharedPtr action_server_;
 
-    std::shared_ptr<robot_model_loader::RobotModelLoader> robot_model_loader_;
-    moveit::core::RobotModelPtr kinematic_model_;
-    moveit::core::RobotStatePtr kinematic_state_;
-    const moveit::core::JointModelGroup* joint_model_group_{nullptr};
+    std::unique_ptr<KinematicsUtils> kinematics_utils_;
 
     rclcpp_action::GoalResponse handle_goal(
         const rclcpp_action::GoalUUID &, std::shared_ptr<const FollowJointTrajectory::Goal> goal) 
@@ -111,9 +105,11 @@ private:
         const auto goal = goal_handle->get_goal();
         auto result = std::make_shared<FollowJointTrajectory::Result>();
         
-        const float TOLERANCE = 1.0f; 
+        const float TOLERANCE = 0.01f; // m 
+        auto simplified_poses = kinematics_utils_->simplifyTrajectory(goal->trajectory.points, TOLERANCE);
+        RCLCPP_INFO(this->get_logger(), "簡化後軌跡點數: %zu", simplified_poses.size());
 
-        for (const auto& point : goal->trajectory.points) {
+        for (const auto& pose : simplified_poses) {
             if (goal_handle->is_canceling()) {
                 result->error_code = control_msgs::action::FollowJointTrajectory::Result::SUCCESSFUL;
                 goal_handle->canceled(result);
@@ -121,31 +117,15 @@ private:
                 return;
             }
 
-            kinematic_state_->setJointGroupPositions(joint_model_group_, point.positions);
-
-            // FK 取得 tool0 to base_link 的 Pose
-            const Eigen::Isometry3d& end_effector_state = \
-                kinematic_state_->getGlobalLinkTransform("lrmate_200id_world").inverse() * kinematic_state_->getGlobalLinkTransform("tool0");
-            
-                std::stringstream ss;
-            ss << "\n" << end_effector_state.rotation().format(Eigen::IOFormat(3, 0, ", ", "\n", "[", "]"));
-            RCLCPP_INFO(this->get_logger(), "%s", ss.str().c_str());
             std::array<float, 6> target_euler_pose;
-            target_euler_pose[0] = static_cast<float>(end_effector_state.translation().x()*1000); // m to mm
-            target_euler_pose[1] = static_cast<float>(end_effector_state.translation().y()*1000);
-            target_euler_pose[2] = static_cast<float>(end_effector_state.translation().z()*1000);
+            target_euler_pose[0] = static_cast<float>(pose.position.x() * 1000); // m to mm
+            target_euler_pose[1] = static_cast<float>(pose.position.y() * 1000);
+            target_euler_pose[2] = static_cast<float>(pose.position.z() * 1000);
+            q_to_wpr(pose.orientation, target_euler_pose[3], target_euler_pose[4], target_euler_pose[5]);
 
-            Eigen::Vector3d euler_angles = end_effector_state.rotation().eulerAngles(0, 1, 2); // Z-Y-X intrinsic order
-            target_euler_pose[3] = static_cast<float>(euler_angles[0] * RAD2DEG);
-            target_euler_pose[4] = static_cast<float>(euler_angles[1] * RAD2DEG);
-            target_euler_pose[5] = static_cast<float>(euler_angles[2] * RAD2DEG);
             RCLCPP_INFO(this->get_logger(), "xyzwpr:%f, %f, %f, %f, %f, %f", 
-                    target_euler_pose[0],
-                    target_euler_pose[1],
-                    target_euler_pose[2],
-                    target_euler_pose[3],
-                    target_euler_pose[4],
-                    target_euler_pose[5]
+                    target_euler_pose[0], target_euler_pose[1], target_euler_pose[2],
+                    target_euler_pose[3], target_euler_pose[4], target_euler_pose[5]
             ); 
 
             move(target_euler_pose);
@@ -154,27 +134,18 @@ private:
             bool reached = false;
             
             while (!reached && rclcpp::ok()) {
-                bool all_in_range = true;
-                auto current_angles = current_joint_angle_;
+                KinematicsUtils::CartesianPose current_cartesian_pose;
+                current_cartesian_pose.position = Eigen::Vector3d(
+                    current_euler_states_[0], current_euler_states_[1], current_euler_states_[2]);
+                
+                wpr_to_q(current_euler_states_[3], current_euler_states_[4], current_euler_states_[5], current_cartesian_pose.orientation);
+                
+                // 內積計算兩個姿態的相似度
+                double position_error = (current_cartesian_pose.position - pose.position).norm(); // m 
+                double orientation_error = current_cartesian_pose.orientation.angularDistance(pose.orientation); // radians
 
-                for (size_t i = 0; i < 3; ++i) {
-                    double target_deg;
-                    if (i == 2) {
-                        target_deg = (point.positions[2] - point.positions[1]) * RAD2DEG;
-                    }
-                    else {
-                        target_deg = point.positions[i] * RAD2DEG;
-                    }
-
-                    if (std::abs(current_angles[i] - target_deg) > TOLERANCE) {
-                        RCLCPP_INFO(this->get_logger(), "Joint %zu 未達標: curr=%f, target=%f, diff=%f", 
-                                i+1, current_angles[i], target_deg, std::abs(current_angles[i] - target_deg));
-                        all_in_range = false;
-                        break;
-                    }
-                }
-
-                if (all_in_range) {
+                RCLCPP_INFO(this->get_logger(), "當前位置誤差: %f m, 姿態誤差: %f rad", position_error, orientation_error);
+                if (position_error < TOLERANCE && orientation_error < TOLERANCE) {
                     reached = true;
                 } else {
                     rclcpp::sleep_for(std::chrono::milliseconds(100)); 
@@ -186,16 +157,27 @@ private:
         RCLCPP_INFO(this->get_logger(), "軌跡執行成功完成");
     }
 
-    void init_moveit() {
-        robot_model_loader_ =
-            std::make_shared<robot_model_loader::RobotModelLoader>(this->shared_from_this());
-        kinematic_model_ = robot_model_loader_->getModel();
-        kinematic_state_ = std::make_shared<moveit::core::RobotState>(kinematic_model_);
-        joint_model_group_ = kinematic_model_->getJointModelGroup("lrmate_200id");
+    void q_to_wpr(const Eigen::Quaterniond& pose, float& w, float& p, float& r) {
+        Eigen::Quaterniond q(pose);
+        Eigen::Vector3d euler = q.toRotationMatrix().eulerAngles(0, 1, 2); // roll, pitch, yaw
+        w = euler[0] * RAD2DEG; p = euler[1] * RAD2DEG; r = euler[2] * RAD2DEG;
+    }
+
+    // function overload for geometry_msgs::msg::Quaternion
+    void q_to_wpr(const geometry_msgs::msg::Quaternion& pose, float& w, float& p, float& r) {
+        Eigen::Quaterniond q(pose.w, pose.x, pose.y, pose.z); // Eigen ctor: w,x,y,z
+        q_to_wpr(q, w, p, r);
+    }
+
+    void wpr_to_q(float& w, float& p, float& r, Eigen::Quaterniond& q) {
+        Eigen::AngleAxisd rollAngle(r * DEG2RAD, Eigen::Vector3d::UnitX());
+        Eigen::AngleAxisd pitchAngle(p * DEG2RAD, Eigen::Vector3d::UnitY());
+        Eigen::AngleAxisd yawAngle(w * DEG2RAD, Eigen::Vector3d::UnitZ());
+        q = yawAngle * pitchAngle * rollAngle; // 注意旋轉順序
     }
 
     void handle_cmd_pose(const geometry_msgs::msg::Pose::SharedPtr msg) {
-        double w, p, r;
+        float w, p, r;
         q_to_wpr(msg->orientation, w, p, r);
         std::array<float, 6> target_pose = {
             static_cast<float>(msg->position.x),
@@ -208,19 +190,18 @@ private:
         move(target_pose);
     }
 
-    void q_to_wpr(const geometry_msgs::msg::Quaternion& q, double& w, double& p, double& r) {
-        tf2::Quaternion tf2_q(q.x, q.y, q.z, q.w);
-        tf2::Matrix3x3 m(tf2_q);
-        m.getRPY(w, p, r);
-        w *= RAD2DEG; p *= RAD2DEG; r *= RAD2DEG;
-    }
-
     void set_override(int8_t value) {
         CommandHeader header = {0, CMD_SET_OVERRIDE};
         send(clientSocket_, &header, sizeof(header), 0);
 
         int override = static_cast<int>(value);
         send(clientSocket_, &override, sizeof(override), 0);
+    }
+
+    void get_euler_state() {
+        CommandHeader header = {0, CMD_GET_EULER_INFO};
+        send(clientSocket_, &header, sizeof(header), 0);
+        recv(clientSocket_, current_euler_states_.data(), sizeof(current_euler_states_), 0);
     }
 
     void get_joint_state() {

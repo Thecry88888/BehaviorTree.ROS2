@@ -43,7 +43,9 @@ set(DEPS
 )
 
 # Action Server
-add_executable(fanuc_bridge_node src/fanuc_bridge_node.cpp)
+add_executable(fanuc_bridge_node 
+  src/fanuc_bridge_node.cpp
+  src/kinematics_utils.cpp)
 
 add_executable(camera_bridge_node src/camera_bridge_node.cpp)
 
